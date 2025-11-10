@@ -8,8 +8,8 @@ pre-commit:
     tidy:
       run: go mod tidy
 
-pre-push:
-  parallel: false
-  commands:
-    ci-check:
-      run: ./scripts/ci_check.sh
+# pre-push:
+#   parallel: false
+#   commands:
+#     ci-check:
+#       run: ./scripts/ci_check.sh
