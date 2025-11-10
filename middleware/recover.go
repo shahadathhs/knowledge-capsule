@@ -1,9 +1,9 @@
 package middleware
 
 import (
+	"knowledge-capsule-api/utils"
 	"log"
 	"net/http"
-	"knowledge-capsule-api/utils"
 )
 
 func Recover(next http.Handler) http.Handler {
