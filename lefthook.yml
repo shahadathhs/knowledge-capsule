@@ -9,10 +9,10 @@ pre-commit:
       run: go mod tidy
 
 pre-push:
-  parallel: false
+  parallel: true
   commands:
     build-local:
       run: ./scripts/build-local.sh
     build-docker:
-      run: ./scripts/build-docker.sh all
+      run: ./scripts/build-docker.sh
       

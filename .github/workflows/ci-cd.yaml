@@ -76,7 +76,7 @@ jobs:
           context: .
           file: Dockerfile.dev
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PACKAGE_NAME }}-dev::${{ secrets.PACKAGE_VERSION}}
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PACKAGE_NAME }}-dev:${{ secrets.PACKAGE_VERSION}}
 
 #   deploy:
 #     name: Trigger Render Deployment
