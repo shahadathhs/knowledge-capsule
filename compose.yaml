@@ -1,17 +1,26 @@
 services:
   api:
-    image: shahadathhs/knowledge-capsule-api
-    platform: 
-    container_name: knowledge-capsule-api
+    container_name: ${PACKAGE_NAME}
+    image: ${DOCKER_USERNAME}/${PACKAGE_NAME}:${PACKAGE_VERSION}
+
     build:
       context: .
       dockerfile: Dockerfile
+
     volumes:
       - .:/app
       - ./data:/app/data
+
     ports:
-      - "8080:8080"
+      - '${PORT}:${PORT}'
+
+    env_file:
+      - .env
+
     environment:
-      - GO_ENV=development
-    command: air -c .air.toml
+      GO_ENV: development
+      PORT: 8080
+
+    command: ["air", "-c", ".air.toml"]
+
     restart: always

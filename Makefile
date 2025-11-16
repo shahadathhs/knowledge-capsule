@@ -10,9 +10,6 @@ BINARY_NAME := server
 BUILD_DIR := tmp
 BUILD_OUT := $(BUILD_DIR)/$(BINARY_NAME)
 GO := go
-GOFLAGS ?=
-LDFLAGS ?=
-BUILD_FLAGS ?=
 
 # Local tools (install into ./.bin by default)
 GOBIN ?= $(CURDIR)/.bin
@@ -40,9 +37,11 @@ help:
 	@echo "  make install             Install dev tools to $(GOBIN)"
 	@echo "  make fmt                 Run go fmt ./..."
 	@echo "  make vet                 Run go vet ./..."
-	@echo "  make test                Run go test ./..."
 	@echo "  make clean               Remove build artifacts and optionally docker images"
-	@echo "  make containers/volumes/networks/images   Inspect docker compose resources"
+	@echo "  make containers          Inspect containers"
+	@echo "  make volumes             List Docker volumes"
+	@echo "  make networks            List Docker networks"
+	@echo "  make images              Show compose images"
 
 # -------------------------
 # Dev tools
@@ -59,7 +58,6 @@ hooks: install
 	@echo "🔧 Installing git hooks..."
 	@$(GOBIN)/lefthook install || lefthook install
 
-# run uses local .bin/air if present, otherwise falls back to system 'air'
 run: install
 	@echo "🚀 Starting API (with live reload)..."
 	@$(GOBIN)/air || air
@@ -80,10 +78,6 @@ fmt:
 vet:
 	@echo "🔍 Running go vet..."
 	@$(GO) vet ./...
-
-test:
-	@echo "🧪 Running tests..."
-	@$(GO) test ./...
 
 # -------------------------
 # Docker / compose
@@ -106,18 +100,20 @@ down:
 
 restart: down up
 
-# follow logs, try common service names (compose service name or container name)
 logs:
 	@echo "📜 Following logs..."
-	@docker compose -f $(COMPOSE_FILE) logs -f $(PACKAGE_NAME) || docker compose -f $(COMPOSE_FILE) logs -f $(APP_NAME)
+	@docker compose -f $(COMPOSE_FILE) logs -f $(PACKAGE_NAME)
 
 containers:
+	@echo "📦 Listing Docker containers..."
 	@docker compose -f $(COMPOSE_FILE) ps
 
 volumes:
+	@echo "📦 Listing Docker volumes..."
 	@docker compose -f $(COMPOSE_FILE) volume ls
 
 networks:
+	@echo "🌐 Listing Docker networks..."
 	@docker compose -f $(COMPOSE_FILE) network ls
 
 images:
@@ -126,9 +122,10 @@ images:
 # -------------------------
 # Cleanup
 # -------------------------
-clean:
+clean: down
 	@echo "🧼 Cleaning build artifacts..."
 	@rm -rf $(BUILD_DIR) $(BIN_DIR)
 	@echo "🧽 Removing docker image (if exists): $(APP_IMAGE)"
-	-@docker rmi -f $(APP_IMAGE) 2>/dev/null || true
+	-@docker rm $(shell docker ps -a -q) || true
+	-@docker rmi $(APP_IMAGE) || true
 	@echo "✅ Clean complete"

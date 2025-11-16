@@ -49,7 +49,7 @@ node_modules/
 
 # Ignore Docker-related files
 Dockerfile
-compose.yml
+compose.yaml
 
 # other
 vendor
