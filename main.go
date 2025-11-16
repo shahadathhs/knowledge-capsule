@@ -7,16 +7,15 @@ import (
 
 	"knowledge-capsule-api/handlers"
 	"knowledge-capsule-api/middleware"
-	"knowledge-capsule-api/utils"
 )
 
 func main() {
 	mux := http.NewServeMux()
 
 	// Default routes
-	mux.HandleFunc("/", utils.AllowMethod(http.MethodGet, handlers.RootHandler))
-	mux.HandleFunc("/api", utils.AllowMethod(http.MethodGet, handlers.ApiRootHandler))
-	mux.HandleFunc("/health", utils.AllowMethod(http.MethodGet, handlers.HealthHandler))
+	mux.HandleFunc("/", handlers.RootHandler)
+	mux.HandleFunc("/api", handlers.ApiRootHandler)
+	mux.HandleFunc("/health", handlers.HealthHandler)
 
 	// Public routes
 	mux.HandleFunc("/api/auth/register", handlers.RegisterHandler)

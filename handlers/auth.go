@@ -13,8 +13,7 @@ import (
 var UserStore = &store.UserStore{FileStore: store.FileStore[models.User]{FilePath: "data/users.json"}}
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.ErrorResponse(w, http.StatusMethodNotAllowed, nil)
+	if !utils.AllowMethod(w, r, http.MethodPost) {
 		return
 	}
 
@@ -37,8 +36,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.ErrorResponse(w, http.StatusMethodNotAllowed, nil)
+	if !utils.AllowMethod(w, r, http.MethodPost) {
 		return
 	}
 

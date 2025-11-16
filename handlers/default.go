@@ -1,27 +1,37 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"knowledge-capsule-api/utils"
 )
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Welcome to Knowledge Capsule API",
-		"status":  "ok",
+	if !utils.AllowMethod(w, r, http.MethodGet) {
+		return
+	}
+
+	utils.JSONResponse(w, http.StatusOK, true, "Welcome to Knowledge Capsule API", map[string]string{
+		"status": "ok",
 	})
 }
 
 func ApiRootHandler(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Knowledge Capsule API Root",
+	if !utils.AllowMethod(w, r, http.MethodGet) {
+		return
+	}
+
+	utils.JSONResponse(w, http.StatusOK, true, "Knowledge Capsule API Root", map[string]string{
 		"version": "v1",
 	})
 }
 
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]string{
-		"status":  "healthy",
+	if !utils.AllowMethod(w, r, http.MethodGet) {
+		return
+	}
+
+	utils.JSONResponse(w, http.StatusOK, true, "Service is healthy", map[string]string{
 		"service": "knowledge-capsule-api",
 	})
 }
