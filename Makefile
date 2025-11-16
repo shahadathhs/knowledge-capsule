@@ -20,7 +20,8 @@ BIN_DIR := $(GOBIN)
 
 # Convenience
 .PHONY: all help install hooks run build-local build build-dev push push-dev \
-	clean fmt vet test up down up-dev down-dev restart-dev logs containers volumes networks images
+	clean fmt vet tidy up down up-dev down-dev restart restart-dev logs logs-dev \
+	containers volumes networks images
 
 all: build-local
 
@@ -42,6 +43,7 @@ help:
 	@echo "  make install                Install dev tools into $(GOBIN)"
 	@echo "  make fmt                    Run go fmt ./..."
 	@echo "  make vet                    Run go vet ./..."
+	@echo "  make tidy                   Run go mod tidy"
 	@echo "  make clean                  Remove build artifacts and our Docker images"
 	@echo "  make containers             docker compose ps"
 	@echo "  make volumes                docker volume ls"
@@ -84,6 +86,10 @@ vet:
 	@echo "🔍 Running go vet..."
 	@$(GO) vet ./...
 
+tidy:
+	@echo "🧹 Running go mod tidy..."
+	@$(GO) mod tidy
+
 # -------------------------
 # Docker images (prod/dev)
 # -------------------------
@@ -122,15 +128,21 @@ down-dev:
 	@echo "🛑 Stopping Docker Compose For Development..."
 	@docker compose -f $(COMPOSE_FILE) --profile dev down
 
+restart: down up
+
 restart-dev: down-dev up-dev
 
 logs:
 	@echo "📜 Following compose logs..."
-	@docker compose -f $(COMPOSE_FILE) logs -f
+	@docker compose -f $(COMPOSE_FILE) --profile prod logs -f
+
+logs-dev:
+	@echo "📜 Following compose logs..."
+	@docker compose -f $(COMPOSE_FILE) --profile dev logs -f
 
 containers:
 	@echo "📦 Listing Docker containers (compose)..."
-	@docker compose -f $(COMPOSE_FILE) ps
+	@docker compose ps -a
 
 volumes:
 	@echo "📦 Listing Docker volumes..."
