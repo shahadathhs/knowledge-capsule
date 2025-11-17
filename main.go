@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-	cfg := config.Load()
 	mux := http.NewServeMux()
 
 	// Default routes
@@ -30,6 +29,12 @@ func main() {
 
 	// Wrap with logger + recover
 	handler := middleware.Recover(middleware.Logger(mux))
+
+	// Load env variables
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal("Failed to load environment variables: ", err)
+	}
 
 	server := &http.Server{
 		Addr:         ":" + cfg.Port,

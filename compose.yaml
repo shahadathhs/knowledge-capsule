@@ -12,14 +12,13 @@ services:
       dockerfile: Dockerfile
 
     ports:
-      - "${PORT:-8080}:${PORT:-8080}"
+      - "8080:${PORT:-8080}"
 
     env_file:
       - .env
 
     environment:
       GO_ENV: production
-      PORT: 8080
     
     command: ["./server"]
     
@@ -48,7 +47,6 @@ services:
     
     environment:
       GO_ENV: development
-      PORT: 8088
 
     command: ["air", "-c", ".air.toml"]
 

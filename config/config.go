@@ -1,25 +1,28 @@
 package config
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 type Config struct {
 	Port string
 	Env  string
 }
 
-func Load() Config {
+func Load() (Config, error) {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080" // default
+		return Config{}, fmt.Errorf("missing required environment variable: PORT")
 	}
 
 	env := os.Getenv("GO_ENV")
 	if env == "" {
-		env = "development"
+		return Config{}, fmt.Errorf("missing required environment variable: GO_ENV")
 	}
 
 	return Config{
 		Port: port,
 		Env:  env,
-	}
+	}, nil
 }
