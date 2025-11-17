@@ -57,12 +57,7 @@ SYNC_ENV_SCRIPT := ./scripts/sync-env.sh
 
 sync-env:
 	@echo "🌱 Syncing .env variables to environment..."
-	@if [ -f $(SYNC_ENV_SCRIPT) ]; then \
-		source $(SYNC_ENV_SCRIPT); \
-		echo "✅ Environment variables loaded from .env"; \
-	else \
-		echo "⚠️  $(SYNC_ENV_SCRIPT) not found, skipping"; \
-	fi
+	@echo "source $(SYNC_ENV_SCRIPT)"
 
 # -------------------------
 # Dev tools
