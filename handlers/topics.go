@@ -12,6 +12,19 @@ import (
 
 var TopicStore = &store.TopicStore{FileStore: store.FileStore[models.Topic]{FilePath: "data/topics.json"}}
 
+// TopicHandler godoc
+// @Summary Get or create topics
+// @Description Get all topics or create a new one
+// @Tags topics
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param input body models.Topic true "Topic info (for POST)"
+// @Success 200 {array} models.Topic
+// @Success 201 {object} models.Topic
+// @Failure 400 {object} map[string]interface{}
+// @Router /api/topics [get]
+// @Router /api/topics [post]
 func TopicHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:

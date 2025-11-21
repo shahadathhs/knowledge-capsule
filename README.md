@@ -4,28 +4,28 @@ Knowledge Capsule API is a Go-based backend service designed to manage "knowledg
 
 ## Features
 
--   **User Authentication**: Secure registration and login using JWT (JSON Web Tokens).
--   **Capsule Management**: Create and retrieve knowledge capsules with support for private/public visibility.
--   **Topic Organization**: Categorize capsules into topics.
--   **Search**: Search functionality to find specific capsules.
--   **Tagging**: Add tags to capsules for better organization.
--   **File-based Storage**: Simple JSON file-based persistence for users, topics, and capsules (easy to set up, no database required).
+- **User Authentication**: Secure registration and login using JWT (JSON Web Tokens).
+- **Capsule Management**: Create and retrieve knowledge capsules with support for private/public visibility.
+- **Topic Organization**: Categorize capsules into topics.
+- **Search**: Search functionality to find specific capsules.
+- **Tagging**: Add tags to capsules for better organization.
+- **File-based Storage**: Simple JSON file-based persistence for users, topics, and capsules (easy to set up, no database required).
 
 ## Tech Stack
 
--   **Language**: [Go](https://go.dev/) (1.23+)
--   **Containerization**: [Docker](https://www.docker.com/)
--   **Build Tool**: [Make](https://www.gnu.org/software/make/)
--   **Live Reload**: [Air](https://github.com/air-verse/air)
--   **Git Hooks**: [Lefthook](https://github.com/evilmartians/lefthook)
+- **Language**: [Go](https://go.dev/) (1.23+)
+- **Containerization**: [Docker](https://www.docker.com/)
+- **Build Tool**: [Make](https://www.gnu.org/software/make/)
+- **Live Reload**: [Air](https://github.com/air-verse/air)
+- **Git Hooks**: [Lefthook](https://github.com/evilmartians/lefthook)
 
 ## Prerequisites
 
 Ensure you have the following installed on your system:
 
--   [Go](https://go.dev/dl/) (1.23 or later)
--   [Docker](https://docs.docker.com/get-docker/) & Docker Compose
--   [Make](https://www.gnu.org/software/make/)
+- [Go](https://go.dev/dl/) (1.23 or later)
+- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
+- [Make](https://www.gnu.org/software/make/)
 
 ## Getting Started
 
@@ -79,17 +79,22 @@ make down      # for prod
 
 If you prefer to run without Docker:
 
-1.  **Install dependencies**:
+1. **Install dependencies**:
+
     ```bash
     make install
     ```
-2.  **Run the server**:
+
+2. **Run the server**:
+
     ```bash
     make run
     ```
+
     This uses `air` for live reloading.
 
     Or build and run the binary directly:
+
     ```bash
     make build-local
     ./tmp/server
@@ -97,34 +102,37 @@ If you prefer to run without Docker:
 
 ## API Documentation
 
+Interactive Swagger documentation is available at `/docs/index.html` when the server is running.
+
 ### Authentication
 
--   **POST** `/api/auth/register`
-    -   Register a new user.
-    -   Body: `{ "name": "John Doe", "email": "john@example.com", "password": "securepassword" }`
--   **POST** `/api/auth/login`
-    -   Login and receive a JWT token.
-    -   Body: `{ "email": "john@example.com", "password": "securepassword" }`
+- **POST** `/api/auth/register`
+  - Register a new user.
+  - Body: `{ "name": "John Doe", "email": "john@example.com", "password": "securepassword" }`
+- **POST** `/api/auth/login`
+  - Login and receive a JWT token.
+  - Body: `{ "email": "john@example.com", "password": "securepassword" }`
 
 ### Topics
 
 *Requires Authentication Header: `Authorization: Bearer <token>`*
 
--   **GET** `/api/topics`
-    -   Get all topics.
--   **POST** `/api/topics`
-    -   Create a new topic.
-    -   Body: `{ "name": "Golang", "description": "All things Go" }`
+- **GET** `/api/topics`
+  - Get all topics.
+- **POST** `/api/topics`
+  - Create a new topic.
+  - Body: `{ "name": "Golang", "description": "All things Go" }`
 
 ### Capsules
 
 *Requires Authentication Header: `Authorization: Bearer <token>`*
 
--   **GET** `/api/capsules`
-    -   Get all capsules for the logged-in user.
--   **POST** `/api/capsules`
-    -   Create a new capsule.
-    -   Body:
+- **GET** `/api/capsules`
+  - Get all capsules for the logged-in user.
+- **POST** `/api/capsules`
+  - Create a new capsule.
+  - Body:
+
         ```json
         {
           "title": "Interfaces in Go",
@@ -139,13 +147,13 @@ If you prefer to run without Docker:
 
 *Requires Authentication Header: `Authorization: Bearer <token>`*
 
--   **GET** `/api/search?q=<query>`
-    -   Search capsules by title or content.
+- **GET** `/api/search?q=<query>`
+  - Search capsules by title or content.
 
 ### Health Check
 
--   **GET** `/health`
-    -   Check if the service is running.
+- **GET** `/health`
+  - Check if the service is running.
 
 ## Project Structure
 
@@ -170,11 +178,11 @@ knowledge-capsule-api/
 
 The `Makefile` provides several useful commands:
 
--   `make help`: Show all available commands.
--   `make run`: Run the app locally with live reload.
--   `make build-local`: Build the binary locally.
--   `make fmt`: Format code.
--   `make vet`: Run `go vet`.
--   `make tidy`: Run `go mod tidy`.
--   `make test`: Run tests (if available).
--   `make g-jwt`: Generate a random JWT secret.
+- `make help`: Show all available commands.
+- `make run`: Run the app locally with live reload.
+- `make build-local`: Build the binary locally.
+- `make fmt`: Format code.
+- `make vet`: Run `go vet`.
+- `make tidy`: Run `go mod tidy`.
+- `make test`: Run tests (if available).
+- `make g-jwt`: Generate a random JWT secret.

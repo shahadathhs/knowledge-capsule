@@ -12,6 +12,16 @@ import (
 
 var UserStore = &store.UserStore{FileStore: store.FileStore[models.User]{FilePath: "data/users.json"}}
 
+// RegisterHandler godoc
+// @Summary Register a new user
+// @Description Register a new user with name, email and password
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param input body object{name=string,email=string,password=string} true "User registration info"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /api/auth/register [post]
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if !utils.AllowMethod(w, r, http.MethodPost) {
 		return
@@ -38,6 +48,16 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// LoginHandler godoc
+// @Summary Login user
+// @Description Login with email and password to get JWT token
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param input body object{email=string,password=string} true "User login info"
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Router /api/auth/login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if !utils.AllowMethod(w, r, http.MethodPost) {
 		return

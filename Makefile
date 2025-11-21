@@ -21,7 +21,7 @@ BIN_DIR := $(GOBIN)
 # Convenience
 .PHONY: all help install hooks run build-local build build-dev push push-dev \
 	clean fmt vet tidy up down up-dev down-dev restart restart-dev logs logs-dev \
-	containers volumes networks images g-jwt sync-env
+	containers volumes networks images g-jwt sync-env swagger
 
 all: build-local
 
@@ -49,6 +49,7 @@ help:
 	@echo "  make volumes                docker volume ls"
 	@echo "  make networks               docker network ls"
 	@echo "  make images                 docker compose images"
+	@echo "  make swagger                Generate Swagger documentation"
 
 # -------------------------
 # Generating JWT secret
@@ -75,6 +76,7 @@ install:
 	@echo "⬇️  Installing dev tools into $(GOBIN)..."
 	@GOBIN="$(GOBIN)" $(GO) install github.com/air-verse/air@latest
 	@GOBIN="$(GOBIN)" $(GO) install github.com/evilmartians/lefthook@latest
+	@GOBIN="$(GOBIN)" $(GO) install github.com/swaggo/swag/cmd/swag@latest
 	@echo "✅ Installed (air, lefthook) to $(GOBIN). Add $(GOBIN) to PATH to run them globally."
 
 hooks: install
@@ -105,6 +107,14 @@ vet:
 tidy:
 	@echo "🧹 Running go mod tidy..."
 	@$(GO) mod tidy
+
+# -------------------------
+# Swagger
+# -------------------------
+swagger:
+	@echo "📝 Generating Swagger docs..."
+	@$(GOBIN)/swag init -g main.go --output docs
+	@echo "✅ Swagger docs generated in docs/"
 
 # -------------------------
 # Docker images (prod/dev)

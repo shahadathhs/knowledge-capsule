@@ -12,6 +12,19 @@ import (
 
 var CapsuleStore = &store.CapsuleStore{FileStore: store.FileStore[models.Capsule]{FilePath: "data/capsules.json"}}
 
+// CapsuleHandler godoc
+// @Summary Get or create capsules
+// @Description Get all capsules for the user or create a new one
+// @Tags capsules
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param input body models.Capsule true "Capsule info (for POST)"
+// @Success 200 {array} models.Capsule
+// @Success 201 {object} models.Capsule
+// @Failure 400 {object} map[string]interface{}
+// @Router /api/capsules [get]
+// @Router /api/capsules [post]
 func CapsuleHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middleware.UserContextKey).(string)
 

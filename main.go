@@ -6,18 +6,39 @@ import (
 	"time"
 
 	"knowledge-capsule-api/config"
+	_ "knowledge-capsule-api/docs"
 	"knowledge-capsule-api/handlers"
 	"knowledge-capsule-api/middleware"
 	"knowledge-capsule-api/utils"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title Knowledge Capsule API
+// @version 1.0
+// @description This is a sample server for Knowledge Capsule API.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /
 func main() {
 	mux := http.NewServeMux()
 
 	// Default routes
 	mux.HandleFunc("/", handlers.RootHandler)
 	mux.HandleFunc("/api", handlers.ApiRootHandler)
+
 	mux.HandleFunc("/health", handlers.HealthHandler)
+
+	// Swagger
+	mux.HandleFunc("/docs/", httpSwagger.WrapHandler)
 
 	// Public routes
 	mux.HandleFunc("/api/auth/register", handlers.RegisterHandler)

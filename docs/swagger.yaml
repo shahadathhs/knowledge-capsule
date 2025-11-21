@@ -1,0 +1,304 @@
+basePath: /
+definitions:
+  models.Capsule:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_private:
+        type: boolean
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      topic:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.Topic:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server for Knowledge Capsule API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Knowledge Capsule API
+  version: "1.0"
+paths:
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with email and password to get JWT token
+      parameters:
+      - description: User login info
+        in: body
+        name: input
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            password:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Login user
+      tags:
+      - auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with name, email and password
+      parameters:
+      - description: User registration info
+        in: body
+        name: input
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            name:
+              type: string
+            password:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
+  /api/capsules:
+    get:
+      consumes:
+      - application/json
+      description: Get all capsules for the user or create a new one
+      parameters:
+      - description: Capsule info (for POST)
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Capsule'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Capsule'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Capsule'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get or create capsules
+      tags:
+      - capsules
+    post:
+      consumes:
+      - application/json
+      description: Get all capsules for the user or create a new one
+      parameters:
+      - description: Capsule info (for POST)
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Capsule'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Capsule'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Capsule'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get or create capsules
+      tags:
+      - capsules
+  /api/search:
+    get:
+      consumes:
+      - application/json
+      description: Search capsules by query string
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Capsule'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Search capsules
+      tags:
+      - search
+  /api/topics:
+    get:
+      consumes:
+      - application/json
+      description: Get all topics or create a new one
+      parameters:
+      - description: Topic info (for POST)
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Topic'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Topic'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Topic'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get or create topics
+      tags:
+      - topics
+    post:
+      consumes:
+      - application/json
+      description: Get all topics or create a new one
+      parameters:
+      - description: Topic info (for POST)
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Topic'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Topic'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Topic'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get or create topics
+      tags:
+      - topics
+  /health:
+    get:
+      description: Check if the service is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - health
+swagger: "2.0"

@@ -26,6 +26,13 @@ func ApiRootHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// HealthHandler godoc
+// @Summary Health check
+// @Description Check if the service is running
+// @Tags health
+// @Produce  json
+// @Success 200 {object} map[string]string
+// @Router /health [get]
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	if !utils.AllowMethod(w, r, http.MethodGet) {
 		return
