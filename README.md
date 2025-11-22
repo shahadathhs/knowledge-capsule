@@ -1,188 +1,182 @@
-# Knowledge Capsule API
+# 🌐 **Knowledge Capsule API**
 
-Knowledge Capsule API is a Go-based backend service designed to manage "knowledge capsules"—bite-sized pieces of information categorized by topics and tags. It provides a RESTful API for creating, retrieving, and searching these capsules, along with user authentication and topic management.
+### ⚡ A Lightweight, Go-Powered Knowledge Management Backend
 
-## Features
+**Knowledge Capsule API** is a fast, simple, Go-based backend that allows you to create, store, search, and organize **“knowledge capsules”** — bite-sized learning notes categorized by topics and tags.
+Perfect for personal knowledge bases, team learning platforms, or lightweight documentation systems.
 
-- **User Authentication**: Secure registration and login using JWT (JSON Web Tokens).
-- **Capsule Management**: Create and retrieve knowledge capsules with support for private/public visibility.
-- **Topic Organization**: Categorize capsules into topics.
-- **Search**: Search functionality to find specific capsules.
-- **Tagging**: Add tags to capsules for better organization.
-- **File-based Storage**: Simple JSON file-based persistence for users, topics, and capsules (easy to set up, no database required).
+📌 **Live API & Swagger Docs:**
+👉 [https://knowledge-capsule-api.onrender.com/docs/index.html](https://knowledge-capsule-api.onrender.com/docs/index.html)
 
-## Tech Stack
+## ✨ **Features**
 
-- **Language**: [Go](https://go.dev/) (1.23+)
-- **Containerization**: [Docker](https://www.docker.com/)
-- **Build Tool**: [Make](https://www.gnu.org/software/make/)
-- **Live Reload**: [Air](https://github.com/air-verse/air)
-- **Git Hooks**: [Lefthook](https://github.com/evilmartians/lefthook)
+* 🔐 **User Authentication** – Secure JWT-based login & registration
+* 🧠 **Capsule Management** – Create, read, and organize knowledge entries
+* 🗂️ **Topic Organization** – Categorize capsules using topics
+* 🔍 **Powerful Search** – Search capsules by title or content
+* 🏷️ **Tagging System** – Add tags for deeper filtering
+* 💾 **File-based Storage** – JSON storage, no DB required — ultra simple setup
 
-## Prerequisites
+## 🧰 **Tech Stack**
 
-Ensure you have the following installed on your system:
+* 🏎️ **Go (1.23+)**
+* 📦 **Docker & Docker Compose**
+* 🔁 **Air (Live Reload)**
+* 🛠️ **Makefile** for workflow automation
+* ⚙️ **Lefthook** for Git hooks
 
-- [Go](https://go.dev/dl/) (1.23 or later)
-- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
-- [Make](https://www.gnu.org/software/make/)
+## 🚀 Getting Started
 
-## Getting Started
-
-### 1. Clone the Repository
+### 1️⃣ **Clone the Repository**
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/shahadathhs/knowledge-capsule-api.git
 cd knowledge-capsule-api
 ```
 
-### 2. Environment Setup
+### 2️⃣ **Environment Setup**
 
-Create a `.env` file in the root directory. You can copy the example below:
+Create `.env` file:
 
 ```bash
-# .env
 PORT=8080
 GO_ENV=development
 JWT_SECRET=your_super_secret_key_here
 ```
 
-> **Note**: You can generate a secure JWT secret using `make g-jwt`.
+💡 Generate secret automatically:
+`make g-jwt`
 
-### 3. Run with Docker (Recommended)
+## 🐳 Run Using Docker (Recommended)
 
-To start the application in **development mode** (with live reload):
+### ▶️ Development Mode (with Live Reload)
 
 ```bash
 make up-dev
 ```
 
-The API will be available at `http://localhost:8081`.
+👉 Runs at: **[http://localhost:8081](http://localhost:8081)**
 
-To start in **production mode**:
+### ▶️ Production Mode
 
 ```bash
 make up
 ```
 
-The API will be available at `http://localhost:8080`.
+👉 Runs at: **[http://localhost:8080](http://localhost:8080)**
 
-To stop the containers:
+### ⏹️ Stop Containers
 
 ```bash
-make down-dev  # for dev
-# or
-make down      # for prod
+make down-dev   # dev
+make down       # prod
 ```
 
-### 4. Run Locally
+## 🖥️ Run Locally (Without Docker)
 
-If you prefer to run without Docker:
+Install dependencies:
 
-1. **Install dependencies**:
+```bash
+make install
+```
 
-    ```bash
-    make install
-    ```
+Start server with live reload:
 
-2. **Run the server**:
+```bash
+make run
+```
 
-    ```bash
-    make run
-    ```
+Or build & run binary:
 
-    This uses `air` for live reloading.
+```bash
+make build-local
+./tmp/server
+```
 
-    Or build and run the binary directly:
+## 📘 **API Documentation**
 
-    ```bash
-    make build-local
-    ./tmp/server
-    ```
+Swagger docs available at:
+`/docs/index.html`
 
-## API Documentation
+## 🔐 **Authentication Endpoints**
 
-Interactive Swagger documentation is available at `/docs/index.html` when the server is running.
+### ➕ Register:
 
-### Authentication
+**POST** `/api/auth/register`
+Body:
 
-- **POST** `/api/auth/register`
-  - Register a new user.
-  - Body: `{ "name": "John Doe", "email": "john@example.com", "password": "securepassword" }`
-- **POST** `/api/auth/login`
-  - Login and receive a JWT token.
-  - Body: `{ "email": "john@example.com", "password": "securepassword" }`
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
 
-### Topics
+### 🔑 Login:
 
-*Requires Authentication Header: `Authorization: Bearer <token>`*
+**POST** `/api/auth/login`
 
-- **GET** `/api/topics`
-  - Get all topics.
-- **POST** `/api/topics`
-  - Create a new topic.
-  - Body: `{ "name": "Golang", "description": "All things Go" }`
+## 🗂️ **Topic Management** (Requires JWT)
 
-### Capsules
+* 📥 **GET** `/api/topics` – Fetch topics
+* ➕ **POST** `/api/topics` – Create topic
 
-*Requires Authentication Header: `Authorization: Bearer <token>`*
+## 🧠 **Capsule Management** (Requires JWT)
 
-- **GET** `/api/capsules`
-  - Get all capsules for the logged-in user.
-- **POST** `/api/capsules`
-  - Create a new capsule.
-  - Body:
+### ➕ Create Capsule
 
-        ```json
-        {
-          "title": "Interfaces in Go",
-          "content": "Interfaces are named collections of method signatures...",
-          "topic": "Golang",
-          "tags": ["programming", "go"],
-          "is_private": false
-        }
-        ```
+**POST** `/api/capsules`
 
-### Search
+```json
+{
+  "title": "Interfaces in Go",
+  "content": "Interfaces are named collections of method signatures...",
+  "topic": "Golang",
+  "tags": ["programming", "go"],
+  "is_private": false
+}
+```
 
-*Requires Authentication Header: `Authorization: Bearer <token>`*
+### 📥 Get Capsules
 
-- **GET** `/api/search?q=<query>`
-  - Search capsules by title or content.
+**GET** `/api/capsules`
 
-### Health Check
+## 🔍 **Search Capsules**
 
-- **GET** `/health`
-  - Check if the service is running.
+**GET** `/api/search?q=<query>`
 
-## Project Structure
+## ❤️‍🩹 **Health Check**
+
+**GET** `/health`
+✔ Confirms server is alive
+
+## 🧱 **Project Structure**
 
 ```
 knowledge-capsule-api/
 ├── config/         # Configuration loading
-├── handlers/       # HTTP request handlers
-├── middleware/     # HTTP middleware (Auth, Logger, etc.)
-├── models/         # Data structures
-├── store/          # Data persistence logic (JSON file store)
-├── utils/          # Utility functions
-├── data/           # JSON data storage (users.json, etc.)
+├── handlers/       # HTTP handlers
+├── middleware/     # Auth, logger, etc.
+├── models/         # Data models
+├── store/          # JSON-based storage
+├── utils/          # Helpers
+├── data/           # JSON data store
 ├── scripts/        # Helper scripts
-├── Dockerfile      # Production Dockerfile
-├── Dockerfile.dev  # Development Dockerfile
-├── compose.yaml    # Docker Compose configuration
-├── Makefile        # Build and run commands
-└── main.go         # Application entry point
+├── Dockerfile
+├── Dockerfile.dev
+├── compose.yaml
+├── Makefile
+└── main.go
 ```
 
-## Development Commands
+## 🛠️ **Development Commands**
 
-The `Makefile` provides several useful commands:
-
-- `make help`: Show all available commands.
-- `make run`: Run the app locally with live reload.
-- `make build-local`: Build the binary locally.
-- `make fmt`: Format code.
-- `make vet`: Run `go vet`.
-- `make tidy`: Run `go mod tidy`.
-- `make test`: Run tests (if available).
-- `make g-jwt`: Generate a random JWT secret.
+* 📘 `make help` – See all commands
+* ▶️ `make run` – Run locally
+* 🔨 `make build-local` – Build binary
+* ✨ `make fmt` – Format code
+* 🔍 `make vet` – Static analysis
+* 🧹 `make tidy` – Cleanup modules
+* 🧪 `make test` – Run tests
+* 🔐 `make g-jwt` – Generate JWT secret
