@@ -1,12 +1,13 @@
 {
-    "cSpell.words": [
-        "Buildx",
-        "evilmartians",
-        "GOARCH",
-        "GOBIN",
-        "GOFLAGS",
-        "gofmt",
-        "lefthook",
-        "shahadathhs"
-    ]
+  "cSpell.words": [
+    "Buildx",
+    "evilmartians",
+    "GOARCH",
+    "GOBIN",
+    "GOFLAGS",
+    "gofmt",
+    "lefthook",
+    "shahadathhs",
+    "swaggo"
+  ]
 }
