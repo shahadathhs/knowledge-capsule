@@ -6,8 +6,8 @@ package tools
 import (
 	_ "github.com/air-verse/air"
 	_ "github.com/evilmartians/lefthook"
-	_ "github.com/swaggo/http-swagger"
-	_ "github.com/swaggo/swag"
 	_ "github.com/gorilla/websocket"
 	_ "github.com/joho/godotenv"
+	_ "github.com/swaggo/http-swagger"
+	_ "github.com/swaggo/swag"
 )
