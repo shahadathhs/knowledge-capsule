@@ -13,6 +13,31 @@ type FileStore[T any] struct {
 	mu       sync.RWMutex
 }
 
+// Init ensures the storage file exists.
+func (fs *FileStore[T]) Init() error {
+	fs.mu.Lock()
+	defer fs.mu.Unlock()
+
+	// Check if file exists
+	_, err := os.Stat(fs.FilePath)
+	if err == nil {
+		return nil // File exists
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return err // Other error
+	}
+
+	// Create file with empty array
+	file, err := os.Create(fs.FilePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Write([]byte("[]"))
+	return err
+}
+
 // Load loads data from a JSON file into memory.
 func (fs *FileStore[T]) Load() ([]T, error) {
 	fs.mu.RLock()

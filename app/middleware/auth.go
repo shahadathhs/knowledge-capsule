@@ -15,12 +15,18 @@ const UserContextKey = contextKey("user_id")
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "missing or invalid Authorization header", http.StatusUnauthorized)
-			return
+		var tokenString string
+
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+		} else {
+			tokenString = r.URL.Query().Get("token")
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenString == "" {
+			http.Error(w, "missing or invalid Authorization header or token", http.StatusUnauthorized)
+			return
+		}
 		claims, err := utils.VerifyJWT(tokenString)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)

@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -12,6 +14,9 @@ type Config struct {
 }
 
 func Load() (Config, error) {
+	// Load .env file if it exists
+	_ = godotenv.Load()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		return Config{}, fmt.Errorf("missing required environment variable: PORT")

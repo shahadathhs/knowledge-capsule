@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Test</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      #chat-box {
+        border: 1px solid #ccc;
+        height: 300px;
+        overflow-y: scroll;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      .message {
+        margin-bottom: 5px;
+      }
+      .my-message {
+        text-align: right;
+        color: blue;
+      }
+      .other-message {
+        text-align: left;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat Test</h1>
+
+    <div id="auth-section">
+      <h3>1. Login</h3>
+      <input
+        type="email"
+        id="email"
+        placeholder="Email"
+        value="test@example.com"
+      />
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        value="password"
+      />
+      <button onclick="login()">Login</button>
+      <button onclick="register()">Register</button>
+      <p id="auth-status"></p>
+    </div>
+
+    <div id="chat-section" style="display: none">
+      <h3>2. Chat</h3>
+      <p>Logged in as: <span id="user-id"></span></p>
+      <input type="text" id="receiver-id" placeholder="Receiver ID" />
+      <div id="chat-box"></div>
+      <input type="text" id="message-input" placeholder="Type a message..." />
+      <button onclick="sendMessage()">Send</button>
+
+      <h3>3. File Upload</h3>
+      <input type="file" id="file-input" />
+      <button onclick="uploadFile()">Upload & Send</button>
+    </div>
+
+    <script>
+      let token = "";
+      let ws = null;
+      let myUserId = "";
+
+      async function register() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "Test User", email, password }),
+        });
+        const data = await res.json();
+        document.getElementById("auth-status").innerText = JSON.stringify(data);
+      }
+
+      async function login() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          token = data.data.token;
+          // Decode token to get user ID (simplified, assumes standard JWT structure)
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          myUserId = payload.user_id;
+          document.getElementById("user-id").innerText = myUserId;
+          document.getElementById("auth-section").style.display = "none";
+          document.getElementById("chat-section").style.display = "block";
+          connectWs();
+        } else {
+          document.getElementById("auth-status").innerText = "Login failed";
+        }
+      }
+
+      function connectWs() {
+        // Note: In a real app, you might pass token in query param or header if supported
+        // Here we assume the browser cookie or header is handled, but standard WebSocket API doesn't support custom headers easily.
+        // For this test, we'll append token to query string if the server supported it, but our handler expects Authorization header.
+        // Since browser WebSocket doesn't support headers, we might need to adjust the handler or use a library.
+        // WAIT: The Go handler middleware checks Authorization header. Browser WebSocket API CANNOT send headers.
+        // We need to pass token in Query param for WebSocket or use a cookie.
+        // Let's assume for this TEST we need to modify the server to accept token in query param for WS, OR we just use this HTML to test the logic if we could.
+
+        // Actually, let's modify the server middleware or handler to check query param "token" as a fallback.
+        // But for now, let's try passing it in the protocol or just query param.
+
+        // Let's try query param:
+        ws = new WebSocket(
+          `ws://${window.location.host}/ws/chat?token=${token}`
+        );
+
+        ws.onopen = () => console.log("Connected");
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          displayMessage(msg, "other-message");
+        };
+      }
+
+      function sendMessage() {
+        const content = document.getElementById("message-input").value;
+        const receiverId = document.getElementById("receiver-id").value;
+        const msg = {
+          receiver_id: receiverId,
+          content: content,
+          type: "text",
+        };
+        ws.send(JSON.stringify(msg));
+        displayMessage({ content }, "my-message");
+        document.getElementById("message-input").value = "";
+      }
+
+      async function uploadFile() {
+        const fileInput = document.getElementById("file-input");
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          const receiverId = document.getElementById("receiver-id").value;
+          const msg = {
+            receiver_id: receiverId,
+            content: `Sent a file: ${data.data.file_url}`,
+            type: "file",
+            file_url: data.data.file_url,
+          };
+          ws.send(JSON.stringify(msg));
+          displayMessage(msg, "my-message");
+        }
+      }
+
+      function displayMessage(msg, className) {
+        const div = document.createElement("div");
+        div.className = `message ${className}`;
+        div.innerText = msg.content;
+        if (msg.file_url) {
+          const link = document.createElement("a");
+          link.href = msg.file_url;
+          link.innerText = " [Download]";
+          link.target = "_blank";
+          div.appendChild(link);
+        }
+        document.getElementById("chat-box").appendChild(div);
+      }
+    </script>
+  </body>
+</html>

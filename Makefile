@@ -77,7 +77,7 @@ install:
 	@GOBIN="$(GOBIN)" $(GO) install github.com/air-verse/air@latest
 	@GOBIN="$(GOBIN)" $(GO) install github.com/evilmartians/lefthook@latest
 	@GOBIN="$(GOBIN)" $(GO) install github.com/swaggo/swag/cmd/swag@latest
-	@echo "✅ Installed (air, lefthook) to $(GOBIN). Add $(GOBIN) to PATH to run them globally."
+	@echo "✅ Installed (air, lefthook, swag) to $(GOBIN). Add $(GOBIN) to PATH to run them globally."
 
 hooks: install
 	@echo "🔧 Installing git hooks..."

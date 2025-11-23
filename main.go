@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"knowledge-capsule-api/pkg/config"
-	_ "knowledge-capsule-api/docs"
 	"knowledge-capsule-api/app/handlers"
 	"knowledge-capsule-api/app/middleware"
+	_ "knowledge-capsule-api/docs"
+	"knowledge-capsule-api/pkg/config"
 	"knowledge-capsule-api/pkg/utils"
 
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -48,6 +48,12 @@ func main() {
 	mux.Handle("/api/capsules", middleware.AuthMiddleware(http.HandlerFunc(handlers.CapsuleHandler)))
 	mux.Handle("/api/search", middleware.AuthMiddleware(http.HandlerFunc(handlers.SearchHandler)))
 
+	// Chat & File Upload
+	mux.Handle("/ws/chat", middleware.AuthMiddleware(http.HandlerFunc(handlers.ChatWebSocketHandler)))
+	mux.Handle("/api/chat/history", middleware.AuthMiddleware(http.HandlerFunc(handlers.GetChatHistoryHandler)))
+	mux.Handle("/api/upload", middleware.AuthMiddleware(http.HandlerFunc(handlers.UploadHandler)))
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("data/uploads"))))
+
 	// Wrap with logger + recover
 	handler := middleware.Recover(middleware.Logger(mux))
 
@@ -58,6 +64,11 @@ func main() {
 	}
 
 	utils.InitJWTSecret(cfg.JWTSecret)
+
+	// Initialize Chat Store
+	if err := handlers.InitChatStore(); err != nil {
+		log.Fatal("Failed to initialize chat store: ", err)
+	}
 
 	server := &http.Server{
 		Addr:         ":" + cfg.Port,
