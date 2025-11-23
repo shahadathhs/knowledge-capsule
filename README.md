@@ -16,10 +16,12 @@ Perfect for personal knowledge bases, team learning platforms, or lightweight do
 * 🔍 **Powerful Search** – Search capsules by title or content
 * 🏷️ **Tagging System** – Add tags for deeper filtering
 * 💾 **File-based Storage** – JSON storage, no DB required — ultra simple setup
+* 💬 **Real-time Chat** – WebSocket-based chat with history
+* 📂 **File Uploads** – Upload and serve files locally
 
 ## 🧰 **Tech Stack**
 
-* 🏎️ **Go (1.23+)**
+* 🏎️ **Go (1.25+)**
 * 📦 **Docker & Docker Compose**
 * 🔁 **Air (Live Reload)**
 * 🛠️ **Makefile** for workflow automation
@@ -93,6 +95,10 @@ make build-local
 ./tmp/server
 ```
 
+## 🧪 **Test Chat UI**
+
+Open `web/test_chat.html` in your browser to test the WebSocket chat functionality.
+
 ## 📘 **API Documentation**
 
 Swagger docs available at:
@@ -151,6 +157,22 @@ Body:
 **GET** `/health`
 ✔ Confirms server is alive
 
+## 💬 **Chat & Uploads** (Requires JWT)
+
+### 🔌 WebSocket Chat
+**GET** `/ws/chat`
+* Connect via WebSocket to chat in real-time.
+
+### 📜 Chat History
+**GET** `/api/chat/history`
+
+### 📤 Upload File
+**POST** `/api/upload`
+* Body: `multipart/form-data` with `file` field.
+
+### 📂 Serve File
+**GET** `/uploads/:filename`
+
 ## 🧱 **Project Structure**
 
 ```
@@ -163,6 +185,7 @@ knowledge-capsule-api/
 ├── pkg/
 │   ├── config/         # Configuration loading
 │   └── utils/          # Helpers
+├── web/                # Frontend assets (Chat UI)
 ├── data/               # JSON data store
 ├── scripts/            # Helper scripts
 ├── Dockerfile
