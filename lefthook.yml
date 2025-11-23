@@ -14,7 +14,7 @@ pre-push:
   parallel: true
   commands:
     swagger:
-      run: ./scripts/generate_swagger.sh
+      run: ./scripts/generate-swagger.sh
     build-local:
       run: ./scripts/build-local.sh
     # build-docker:
