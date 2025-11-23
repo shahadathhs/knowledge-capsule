@@ -155,14 +155,16 @@ Body:
 
 ```
 knowledge-capsule-api/
-├── config/         # Configuration loading
-├── handlers/       # HTTP handlers
-├── middleware/     # Auth, logger, etc.
-├── models/         # Data models
-├── store/          # JSON-based storage
-├── utils/          # Helpers
-├── data/           # JSON data store
-├── scripts/        # Helper scripts
+├── app/
+│   ├── handlers/       # HTTP handlers
+│   ├── middleware/     # Auth, logger, etc.
+│   ├── models/         # Data models
+│   └── store/          # JSON-based storage
+├── pkg/
+│   ├── config/         # Configuration loading
+│   └── utils/          # Helpers
+├── data/               # JSON data store
+├── scripts/            # Helper scripts
 ├── Dockerfile
 ├── Dockerfile.dev
 ├── compose.yaml
