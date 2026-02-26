@@ -27,9 +27,11 @@ func (s *topicStore) AddTopic(name, description string) (*models.Topic, error) {
 	}
 
 	topic := models.Topic{
-		ID:          utils.GenerateUUID(),
-		Name:        name,
-		Description: description,
+		ID: utils.GenerateUUID(),
+		TopicInput: models.TopicInput{
+			Name:        name,
+			Description: description,
+		},
 	}
 	if err := s.DB.Create(&topic).Error; err != nil {
 		return nil, err

@@ -23,13 +23,15 @@ func NewCapsuleStore(db *gorm.DB) CapsuleStore {
 // AddCapsule creates a new capsule.
 func (s *capsuleStore) AddCapsule(userID, title, content, topic string, tags []string, isPrivate bool) (*models.Capsule, error) {
 	capsule := models.Capsule{
-		ID:        utils.GenerateUUID(),
-		UserID:    userID,
-		Title:     title,
-		Content:   content,
-		Topic:     topic,
-		Tags:      models.Tags(tags),
-		IsPrivate: isPrivate,
+		ID:     utils.GenerateUUID(),
+		UserID: userID,
+		CapsuleInput: models.CapsuleInput{
+			Title:     title,
+			Content:   content,
+			Topic:     topic,
+			Tags:      models.Tags(tags),
+			IsPrivate: isPrivate,
+		},
 	}
 	if err := s.DB.Create(&capsule).Error; err != nil {
 		return nil, err

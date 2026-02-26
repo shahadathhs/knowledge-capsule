@@ -134,7 +134,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all capsules for the user (paginated) or create a new one",
+                "description": "Get all capsules for the user (paginated)",
                 "consumes": [
                     "application/json"
                 ],
@@ -144,7 +144,7 @@ const docTemplate = `{
                 "tags": [
                     "capsules"
                 ],
-                "summary": "Get or create capsules",
+                "summary": "Get capsules",
                 "parameters": [
                     {
                         "type": "integer",
@@ -157,15 +157,6 @@ const docTemplate = `{
                         "description": "Items per page (default 20, max 100)",
                         "name": "limit",
                         "in": "query"
-                    },
-                    {
-                        "description": "Capsule info (for POST)",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Capsule"
-                        }
                     }
                 ],
                 "responses": {
@@ -173,12 +164,6 @@ const docTemplate = `{
                         "description": "Paginated list: data, page, limit, total",
                         "schema": {
                             "$ref": "#/definitions/models.PaginatedResponse"
-                        }
-                    },
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.Capsule"
                         }
                     },
                     "400": {
@@ -196,7 +181,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all capsules for the user (paginated) or create a new one",
+                "description": "Create a new capsule",
                 "consumes": [
                     "application/json"
                 ],
@@ -206,37 +191,19 @@ const docTemplate = `{
                 "tags": [
                     "capsules"
                 ],
-                "summary": "Get or create capsules",
+                "summary": "Create capsule",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Page number (default 1)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Items per page (default 20, max 100)",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "description": "Capsule info (for POST)",
+                        "description": "Capsule data",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Capsule"
+                            "$ref": "#/definitions/models.CapsuleInput"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Paginated list: data, page, limit, total",
-                        "schema": {
-                            "$ref": "#/definitions/models.PaginatedResponse"
-                        }
-                    },
                     "201": {
                         "description": "Created",
                         "schema": {
@@ -260,7 +227,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get, update, or delete a single capsule (user must own it)",
+                "description": "Get a single capsule (user must own it)",
                 "consumes": [
                     "application/json"
                 ],
@@ -270,7 +237,7 @@ const docTemplate = `{
                 "tags": [
                     "capsules"
                 ],
-                "summary": "Get, update, or delete a capsule by ID",
+                "summary": "Get capsule by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -278,26 +245,17 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Updated capsule fields (for PUT)",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Capsule"
-                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Capsule fetched or updated",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.Capsule"
                         }
                     },
                     "404": {
-                        "description": "Capsule not found",
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -311,7 +269,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get, update, or delete a single capsule (user must own it)",
+                "description": "Update a capsule (user must own it)",
                 "consumes": [
                     "application/json"
                 ],
@@ -321,7 +279,7 @@ const docTemplate = `{
                 "tags": [
                     "capsules"
                 ],
-                "summary": "Get, update, or delete a capsule by ID",
+                "summary": "Update capsule by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -331,24 +289,31 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Updated capsule fields (for PUT)",
+                        "description": "Updated capsule fields",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Capsule"
+                            "$ref": "#/definitions/models.CapsuleInput"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Capsule fetched or updated",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.Capsule"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
-                        "description": "Capsule not found",
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -362,7 +327,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get, update, or delete a single capsule (user must own it)",
+                "description": "Delete a capsule (user must own it)",
                 "consumes": [
                     "application/json"
                 ],
@@ -372,7 +337,7 @@ const docTemplate = `{
                 "tags": [
                     "capsules"
                 ],
-                "summary": "Get, update, or delete a capsule by ID",
+                "summary": "Delete capsule by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -380,26 +345,18 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Updated capsule fields (for PUT)",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Capsule"
-                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Capsule fetched or updated",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Capsule"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "Capsule not found",
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -471,7 +428,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all topics (paginated) or create a new one",
+                "description": "Get all topics (paginated)",
                 "consumes": [
                     "application/json"
                 ],
@@ -481,7 +438,7 @@ const docTemplate = `{
                 "tags": [
                     "topics"
                 ],
-                "summary": "Get or create topics",
+                "summary": "Get topics",
                 "parameters": [
                     {
                         "type": "integer",
@@ -494,15 +451,6 @@ const docTemplate = `{
                         "description": "Items per page (default 20, max 100)",
                         "name": "limit",
                         "in": "query"
-                    },
-                    {
-                        "description": "Topic info (for POST)",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Topic"
-                        }
                     }
                 ],
                 "responses": {
@@ -510,12 +458,6 @@ const docTemplate = `{
                         "description": "Paginated list: data, page, limit, total",
                         "schema": {
                             "$ref": "#/definitions/models.PaginatedResponse"
-                        }
-                    },
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.Topic"
                         }
                     },
                     "400": {
@@ -533,7 +475,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all topics (paginated) or create a new one",
+                "description": "Create a new topic",
                 "consumes": [
                     "application/json"
                 ],
@@ -543,37 +485,19 @@ const docTemplate = `{
                 "tags": [
                     "topics"
                 ],
-                "summary": "Get or create topics",
+                "summary": "Create topic",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Page number (default 1)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Items per page (default 20, max 100)",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "description": "Topic info (for POST)",
+                        "description": "Topic data",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Topic"
+                            "$ref": "#/definitions/models.TopicInput"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Paginated list: data, page, limit, total",
-                        "schema": {
-                            "$ref": "#/definitions/models.PaginatedResponse"
-                        }
-                    },
                     "201": {
                         "description": "Created",
                         "schema": {
@@ -597,7 +521,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get, update, or delete a single topic",
+                "description": "Get a single topic",
                 "consumes": [
                     "application/json"
                 ],
@@ -607,7 +531,7 @@ const docTemplate = `{
                 "tags": [
                     "topics"
                 ],
-                "summary": "Get, update, or delete a topic by ID",
+                "summary": "Get topic by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -615,26 +539,17 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Updated topic fields (for PUT)",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Topic"
-                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Topic fetched or updated",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.Topic"
                         }
                     },
                     "404": {
-                        "description": "Topic not found",
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -648,7 +563,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get, update, or delete a single topic",
+                "description": "Update a topic",
                 "consumes": [
                     "application/json"
                 ],
@@ -658,7 +573,7 @@ const docTemplate = `{
                 "tags": [
                     "topics"
                 ],
-                "summary": "Get, update, or delete a topic by ID",
+                "summary": "Update topic by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -668,24 +583,31 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Updated topic fields (for PUT)",
+                        "description": "Updated topic fields",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Topic"
+                            "$ref": "#/definitions/models.TopicInput"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Topic fetched or updated",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.Topic"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
-                        "description": "Topic not found",
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -699,7 +621,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get, update, or delete a single topic",
+                "description": "Delete a topic",
                 "consumes": [
                     "application/json"
                 ],
@@ -709,7 +631,7 @@ const docTemplate = `{
                 "tags": [
                     "topics"
                 ],
-                "summary": "Get, update, or delete a topic by ID",
+                "summary": "Delete topic by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -717,26 +639,18 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Updated topic fields (for PUT)",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Topic"
-                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Topic fetched or updated",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Topic"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "Topic not found",
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -774,7 +688,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "content": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Interfaces are named collections of method signatures..."
                 },
                 "created_at": {
                     "type": "string"
@@ -783,25 +698,63 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "is_private": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "example": false
                 },
                 "tags": {
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "programming",
+                        "go"
+                    ]
                 },
                 "title": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Interfaces in Go"
                 },
                 "topic": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Golang"
                 },
                 "updated_at": {
                     "type": "string"
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "models.CapsuleInput": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "example": "Interfaces are named collections of method signatures..."
+                },
+                "is_private": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "programming",
+                        "go"
+                    ]
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Interfaces in Go"
+                },
+                "topic": {
+                    "type": "string",
+                    "example": "Golang"
                 }
             }
         },
@@ -833,18 +786,41 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Go programming language"
                 },
                 "id": {
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Golang"
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
+        },
+        "models.TopicInput": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Go programming language"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Golang"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Enter your JWT token (or \"Bearer \u0026lt;token\u0026gt;\" for clarity). Get token from POST /api/auth/login.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

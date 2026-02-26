@@ -36,19 +36,29 @@ cd knowledge-capsule
 
 ### 2️⃣ **Environment Setup**
 
-Create `.env` file:
+Copy `.env.example` to `.env` and fill in values:
 
 ```bash
-PORT=8080
-GO_ENV=development
-JWT_SECRET=your_super_secret_key_here
-DATABASE_URL=postgres://user:pass@localhost:5432/knowledge?sslmode=disable
+cp .env.example .env
 ```
 
-💡 Generate secret automatically:
-`make g-jwt`
+Required variables:
+
+| Variable | Description |
+|----------|-------------|
+| `PORT` | Server port (default: 8080) |
+| `GO_ENV` | `development` or `production` |
+| `JWT_SECRET` | Secret for JWT signing |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `POSTGRES_USER` | DB user (for Docker Compose) |
+| `POSTGRES_PASSWORD` | DB password |
+| `POSTGRES_DB` | Database name |
+
+💡 Generate JWT secret: `make g-jwt`
 
 ## 🐳 Run Using Docker (Recommended)
+
+Docker Compose starts **PostgreSQL** + **API** together. The database is included in both `dev` and `prod` profiles.
 
 ### ▶️ Development Mode (with Live Reload)
 
@@ -56,7 +66,7 @@ DATABASE_URL=postgres://user:pass@localhost:5432/knowledge?sslmode=disable
 make up-dev
 ```
 
-👉 Runs at: **[http://localhost:8081](http://localhost:8081)**
+👉 API at **[http://localhost:8081](http://localhost:8081)** · PostgreSQL on `localhost:5432`
 
 ### ▶️ Production Mode
 
@@ -64,7 +74,16 @@ make up-dev
 make up
 ```
 
-👉 Runs at: **[http://localhost:8080](http://localhost:8080)**
+👉 API at **[http://localhost:8080](http://localhost:8080)** · PostgreSQL on `localhost:5432`
+
+### 🐘 Database Only (for local dev without full compose)
+
+If you run the API locally (`make run`) and want PostgreSQL in Docker:
+
+```bash
+make db        # Start PostgreSQL
+make down-db   # Stop PostgreSQL
+```
 
 ### ⏹️ Stop Containers
 
@@ -102,8 +121,9 @@ make build-local
 
 ## 📘 **API Documentation**
 
-Swagger docs available at:
-`/docs/index.html`
+Swagger UI at `/docs/index.html`
+
+**Protected endpoints:** Click **Authorize**, enter `Bearer <your-jwt-token>` (get token from POST `/api/auth/login`), then **Authorize** again. All subsequent requests will include the token.
 
 ## 🔐 **Authentication Endpoints**
 

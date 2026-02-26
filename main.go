@@ -28,6 +28,11 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Enter your JWT token (or "Bearer &lt;token&gt;" for clarity). Get token from POST /api/auth/login.
+
 // @BasePath /
 func main() {
 	// Load env variables first (for log level)

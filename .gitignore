@@ -59,4 +59,5 @@ vendor/
 
 tmp
 .bin
+.env
 .env.prod

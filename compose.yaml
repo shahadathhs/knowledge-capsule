@@ -39,7 +39,7 @@ services:
     command: ["./server"]
     restart: always
     volumes:
-      - prod_data:/app/data
+      - prod_uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -69,11 +69,11 @@ services:
     restart: unless-stopped
     volumes:
       - .:/app
-      - ./data:/app/data
+      - ./uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   postgres_data:
-  prod_data:
+  prod_uploads:

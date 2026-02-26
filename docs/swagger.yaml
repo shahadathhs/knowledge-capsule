@@ -3,24 +3,53 @@ definitions:
   models.Capsule:
     properties:
       content:
+        example: Interfaces are named collections of method signatures...
         type: string
       created_at:
         type: string
       id:
         type: string
       is_private:
+        example: false
         type: boolean
       tags:
+        example:
+        - programming
+        - go
         items:
           type: string
         type: array
       title:
+        example: Interfaces in Go
         type: string
       topic:
+        example: Golang
         type: string
       updated_at:
         type: string
       user_id:
+        type: string
+    type: object
+  models.CapsuleInput:
+    properties:
+      content:
+        example: Interfaces are named collections of method signatures...
+        type: string
+      is_private:
+        example: false
+        type: boolean
+      tags:
+        example:
+        - programming
+        - go
+        items:
+          type: string
+        type: array
+      title:
+        example: Interfaces in Go
+        type: string
+      topic:
+        example: Golang
         type: string
     type: object
   models.PaginatedResponse:
@@ -42,12 +71,23 @@ definitions:
       created_at:
         type: string
       description:
+        example: Go programming language
         type: string
       id:
         type: string
       name:
+        example: Golang
         type: string
       updated_at:
+        type: string
+    type: object
+  models.TopicInput:
+    properties:
+      description:
+        example: Go programming language
+        type: string
+      name:
+        example: Golang
         type: string
     type: object
 info:
@@ -135,7 +175,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get all capsules for the user (paginated) or create a new one
+      description: Get all capsules for the user (paginated)
       parameters:
       - description: Page number (default 1)
         in: query
@@ -145,12 +185,6 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: Capsule info (for POST)
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.Capsule'
       produces:
       - application/json
       responses:
@@ -158,10 +192,6 @@ paths:
           description: 'Paginated list: data, page, limit, total'
           schema:
             $ref: '#/definitions/models.PaginatedResponse'
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.Capsule'
         "400":
           description: Bad Request
           schema:
@@ -169,35 +199,23 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get or create capsules
+      summary: Get capsules
       tags:
       - capsules
     post:
       consumes:
       - application/json
-      description: Get all capsules for the user (paginated) or create a new one
+      description: Create a new capsule
       parameters:
-      - description: Page number (default 1)
-        in: query
-        name: page
-        type: integer
-      - description: Items per page (default 20, max 100)
-        in: query
-        name: limit
-        type: integer
-      - description: Capsule info (for POST)
+      - description: Capsule data
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/models.Capsule'
+          $ref: '#/definitions/models.CapsuleInput'
       produces:
       - application/json
       responses:
-        "200":
-          description: 'Paginated list: data, page, limit, total'
-          schema:
-            $ref: '#/definitions/models.PaginatedResponse'
         "201":
           description: Created
           schema:
@@ -209,107 +227,101 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get or create capsules
+      summary: Create capsule
       tags:
       - capsules
   /api/capsules/{id}:
     delete:
       consumes:
       - application/json
-      description: Get, update, or delete a single capsule (user must own it)
+      description: Delete a capsule (user must own it)
       parameters:
       - description: Capsule ID
         in: path
         name: id
         required: true
         type: string
-      - description: Updated capsule fields (for PUT)
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.Capsule'
       produces:
       - application/json
       responses:
         "200":
-          description: Capsule fetched or updated
+          description: OK
           schema:
-            $ref: '#/definitions/models.Capsule'
+            additionalProperties: true
+            type: object
         "404":
-          description: Capsule not found
+          description: Not Found
           schema:
             additionalProperties: true
             type: object
       security:
       - BearerAuth: []
-      summary: Get, update, or delete a capsule by ID
+      summary: Delete capsule by ID
       tags:
       - capsules
     get:
       consumes:
       - application/json
-      description: Get, update, or delete a single capsule (user must own it)
+      description: Get a single capsule (user must own it)
       parameters:
       - description: Capsule ID
         in: path
         name: id
         required: true
         type: string
-      - description: Updated capsule fields (for PUT)
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.Capsule'
       produces:
       - application/json
       responses:
         "200":
-          description: Capsule fetched or updated
+          description: OK
           schema:
             $ref: '#/definitions/models.Capsule'
         "404":
-          description: Capsule not found
+          description: Not Found
           schema:
             additionalProperties: true
             type: object
       security:
       - BearerAuth: []
-      summary: Get, update, or delete a capsule by ID
+      summary: Get capsule by ID
       tags:
       - capsules
     put:
       consumes:
       - application/json
-      description: Get, update, or delete a single capsule (user must own it)
+      description: Update a capsule (user must own it)
       parameters:
       - description: Capsule ID
         in: path
         name: id
         required: true
         type: string
-      - description: Updated capsule fields (for PUT)
+      - description: Updated capsule fields
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/models.Capsule'
+          $ref: '#/definitions/models.CapsuleInput'
       produces:
       - application/json
       responses:
         "200":
-          description: Capsule fetched or updated
+          description: OK
           schema:
             $ref: '#/definitions/models.Capsule'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
         "404":
-          description: Capsule not found
+          description: Not Found
           schema:
             additionalProperties: true
             type: object
       security:
       - BearerAuth: []
-      summary: Get, update, or delete a capsule by ID
+      summary: Update capsule by ID
       tags:
       - capsules
   /api/search:
@@ -352,7 +364,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get all topics (paginated) or create a new one
+      description: Get all topics (paginated)
       parameters:
       - description: Page number (default 1)
         in: query
@@ -362,12 +374,6 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: Topic info (for POST)
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.Topic'
       produces:
       - application/json
       responses:
@@ -375,10 +381,6 @@ paths:
           description: 'Paginated list: data, page, limit, total'
           schema:
             $ref: '#/definitions/models.PaginatedResponse'
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.Topic'
         "400":
           description: Bad Request
           schema:
@@ -386,35 +388,23 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get or create topics
+      summary: Get topics
       tags:
       - topics
     post:
       consumes:
       - application/json
-      description: Get all topics (paginated) or create a new one
+      description: Create a new topic
       parameters:
-      - description: Page number (default 1)
-        in: query
-        name: page
-        type: integer
-      - description: Items per page (default 20, max 100)
-        in: query
-        name: limit
-        type: integer
-      - description: Topic info (for POST)
+      - description: Topic data
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/models.Topic'
+          $ref: '#/definitions/models.TopicInput'
       produces:
       - application/json
       responses:
-        "200":
-          description: 'Paginated list: data, page, limit, total'
-          schema:
-            $ref: '#/definitions/models.PaginatedResponse'
         "201":
           description: Created
           schema:
@@ -426,107 +416,101 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get or create topics
+      summary: Create topic
       tags:
       - topics
   /api/topics/{id}:
     delete:
       consumes:
       - application/json
-      description: Get, update, or delete a single topic
+      description: Delete a topic
       parameters:
       - description: Topic ID
         in: path
         name: id
         required: true
         type: string
-      - description: Updated topic fields (for PUT)
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.Topic'
       produces:
       - application/json
       responses:
         "200":
-          description: Topic fetched or updated
+          description: OK
           schema:
-            $ref: '#/definitions/models.Topic'
+            additionalProperties: true
+            type: object
         "404":
-          description: Topic not found
+          description: Not Found
           schema:
             additionalProperties: true
             type: object
       security:
       - BearerAuth: []
-      summary: Get, update, or delete a topic by ID
+      summary: Delete topic by ID
       tags:
       - topics
     get:
       consumes:
       - application/json
-      description: Get, update, or delete a single topic
+      description: Get a single topic
       parameters:
       - description: Topic ID
         in: path
         name: id
         required: true
         type: string
-      - description: Updated topic fields (for PUT)
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.Topic'
       produces:
       - application/json
       responses:
         "200":
-          description: Topic fetched or updated
+          description: OK
           schema:
             $ref: '#/definitions/models.Topic'
         "404":
-          description: Topic not found
+          description: Not Found
           schema:
             additionalProperties: true
             type: object
       security:
       - BearerAuth: []
-      summary: Get, update, or delete a topic by ID
+      summary: Get topic by ID
       tags:
       - topics
     put:
       consumes:
       - application/json
-      description: Get, update, or delete a single topic
+      description: Update a topic
       parameters:
       - description: Topic ID
         in: path
         name: id
         required: true
         type: string
-      - description: Updated topic fields (for PUT)
+      - description: Updated topic fields
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/models.Topic'
+          $ref: '#/definitions/models.TopicInput'
       produces:
       - application/json
       responses:
         "200":
-          description: Topic fetched or updated
+          description: OK
           schema:
             $ref: '#/definitions/models.Topic'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
         "404":
-          description: Topic not found
+          description: Not Found
           schema:
             additionalProperties: true
             type: object
       security:
       - BearerAuth: []
-      summary: Get, update, or delete a topic by ID
+      summary: Update topic by ID
       tags:
       - topics
   /health:
@@ -544,4 +528,11 @@ paths:
       summary: Health check
       tags:
       - health
+securityDefinitions:
+  BearerAuth:
+    description: Enter your JWT token (or "Bearer &lt;token&gt;" for clarity). Get
+      token from POST /api/auth/login.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
