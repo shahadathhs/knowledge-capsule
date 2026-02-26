@@ -2,9 +2,11 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"knowledge-capsule/app/models"
+	"knowledge-capsule/pkg/logger"
 )
 
 func JSONResponse(w http.ResponseWriter, status int, success bool, message string, data interface{}) {
@@ -47,7 +49,8 @@ func JSONPaginatedResponse(w http.ResponseWriter, status int, message string, da
 	json.NewEncoder(w).Encode(response)
 }
 
-func ErrorResponse(w http.ResponseWriter, status int, err error) {
+// ErrorResponse writes a JSON error response and logs the error. Pass nil for r when request is unavailable.
+func ErrorResponse(w http.ResponseWriter, r *http.Request, status int, err error) {
 	var errorMessage string
 
 	switch {
@@ -61,6 +64,17 @@ func ErrorResponse(w http.ResponseWriter, status int, err error) {
 		errorMessage = "Bad request"
 	default:
 		errorMessage = "An error occurred"
+	}
+
+	// Global error logging
+	logErr := err
+	if logErr == nil {
+		logErr = errors.New(errorMessage)
+	}
+	if r != nil {
+		logger.ErrorRequest(r, logger.EventError, logErr)
+	} else {
+		logger.Error(logger.EventError, logErr)
 	}
 
 	JSONResponse(w, status, false, "", map[string]string{"error": errorMessage})

@@ -3,11 +3,13 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 
 	"knowledge-capsule/app/middleware"
 	"knowledge-capsule/app/models"
+	"knowledge-capsule/pkg/logger"
 	"knowledge-capsule/pkg/utils"
 )
 
@@ -26,12 +28,12 @@ func GetTopicByID(w http.ResponseWriter, r *http.Request) {
 	_ = r.Context().Value(middleware.UserContextKey).(string) // auth required
 	id := strings.TrimPrefix(r.URL.Path, "/api/topics/")
 	if id == "" {
-		utils.ErrorResponse(w, http.StatusBadRequest, errors.New("missing topic id"))
+		utils.ErrorResponse(w, r, http.StatusBadRequest, errors.New("missing topic id"))
 		return
 	}
 	topic, err := TopicStore.FindByID(id)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusNotFound, err)
+		utils.ErrorResponse(w, r, http.StatusNotFound, err)
 		return
 	}
 	utils.JSONResponse(w, http.StatusOK, true, "Topic fetched", topic)
@@ -54,30 +56,31 @@ func UpdateTopicByID(w http.ResponseWriter, r *http.Request) {
 	_ = r.Context().Value(middleware.UserContextKey).(string) // auth required
 	id := strings.TrimPrefix(r.URL.Path, "/api/topics/")
 	if id == "" {
-		utils.ErrorResponse(w, http.StatusBadRequest, errors.New("missing topic id"))
+		utils.ErrorResponse(w, r, http.StatusBadRequest, errors.New("missing topic id"))
 		return
 	}
 	var req models.TopicInput
 	if r.Body == nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, errors.New("empty request body"))
+		utils.ErrorResponse(w, r, http.StatusBadRequest, errors.New("empty request body"))
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
-		utils.ErrorResponse(w, http.StatusBadRequest, &utils.ValidationError{Field: "name", Message: "cannot be empty"})
+		utils.ErrorResponse(w, r, http.StatusBadRequest, &utils.ValidationError{Field: "name", Message: "cannot be empty"})
 		return
 	}
 
 	topic, err := TopicStore.UpdateTopic(id, name, req.Description)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusNotFound, err)
+		utils.ErrorResponse(w, r, http.StatusNotFound, err)
 		return
 	}
+	logger.LogEvent(logger.EventTopic, r, slog.String("action", "update"), slog.String("topic_id", id))
 	utils.JSONResponse(w, http.StatusOK, true, "Topic updated", topic)
 }
 
@@ -96,13 +99,14 @@ func DeleteTopicByID(w http.ResponseWriter, r *http.Request) {
 	_ = r.Context().Value(middleware.UserContextKey).(string) // auth required
 	id := strings.TrimPrefix(r.URL.Path, "/api/topics/")
 	if id == "" {
-		utils.ErrorResponse(w, http.StatusBadRequest, errors.New("missing topic id"))
+		utils.ErrorResponse(w, r, http.StatusBadRequest, errors.New("missing topic id"))
 		return
 	}
 	if err := TopicStore.DeleteTopic(id); err != nil {
-		utils.ErrorResponse(w, http.StatusNotFound, err)
+		utils.ErrorResponse(w, r, http.StatusNotFound, err)
 		return
 	}
+	logger.LogEvent(logger.EventTopic, r, slog.String("action", "delete"), slog.String("topic_id", id))
 	utils.JSONResponse(w, http.StatusOK, true, "Topic deleted", nil)
 }
 
@@ -116,6 +120,6 @@ func TopicByIDHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		DeleteTopicByID(w, r)
 	default:
-		utils.ErrorResponse(w, http.StatusMethodNotAllowed, nil)
+		utils.ErrorResponse(w, r, http.StatusMethodNotAllowed, nil)
 	}
 }

@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 
 	"knowledge-capsule/app/middleware"
 	"knowledge-capsule/app/models"
+	"knowledge-capsule/pkg/logger"
 	"knowledge-capsule/pkg/utils"
 )
 
@@ -27,7 +30,7 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middleware.UserContextKey).(string)
 	user, err := UserStore.FindByID(userID)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusNotFound, err)
+		utils.ErrorResponse(w, r, http.StatusNotFound, err)
 		return
 	}
 	utils.JSONResponse(w, http.StatusOK, true, "Profile fetched", user)
@@ -55,17 +58,17 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		AvatarURL string `json:"avatar_url"`
 	}
 	if r.Body == nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, nil)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, nil)
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	name := strings.TrimSpace(req.Name)
 	if err := UserStore.UpdateProfile(userID, name, req.AvatarURL); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, err)
 		return
 	}
 
@@ -97,9 +100,10 @@ func ListUsers(w http.ResponseWriter, r *http.Request) {
 
 	users, total, err := UserStore.ListUsers(q, role, page, limit)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err)
+		utils.ErrorResponse(w, r, http.StatusInternalServerError, err)
 		return
 	}
+	logger.LogEvent(logger.EventUser, r, slog.String("action", "list"), slog.Int("count", len(users)), slog.Int("total", total), slog.String("q", q), slog.String("role_filter", role))
 	utils.JSONPaginatedResponse(w, http.StatusOK, "Users fetched", users, page, limit, total)
 }
 
@@ -122,13 +126,13 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 	// Admin check is done by RequireAdmin middleware on this route
 	id := strings.TrimPrefix(r.URL.Path, "/api/users/")
 	if id == "" {
-		utils.ErrorResponse(w, http.StatusBadRequest, nil)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, nil)
 		return
 	}
 
 	user, err := UserStore.FindByID(id)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusNotFound, err)
+		utils.ErrorResponse(w, r, http.StatusNotFound, err)
 		return
 	}
 	utils.JSONResponse(w, http.StatusOK, true, "User fetched", user)
@@ -146,7 +150,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		case http.MethodPatch:
 			UpdateProfile(w, r)
 		default:
-			utils.ErrorResponse(w, http.StatusMethodNotAllowed, nil)
+			utils.ErrorResponse(w, r, http.StatusMethodNotAllowed, nil)
 		}
 		return
 	}
@@ -155,12 +159,12 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	if path != "" {
 		role, _ := r.Context().Value(middleware.RoleContextKey).(string)
 		if role != models.RoleAdmin && role != models.RoleSuperAdmin {
-			http.Error(w, "forbidden: admin access required", http.StatusForbidden)
+			utils.ErrorResponse(w, r, http.StatusForbidden, errors.New("admin access required"))
 			return
 		}
 		GetUserByID(w, r)
 		return
 	}
 
-	utils.ErrorResponse(w, http.StatusNotFound, nil)
+	utils.ErrorResponse(w, r, http.StatusNotFound, nil)
 }

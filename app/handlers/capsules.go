@@ -3,11 +3,13 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 
 	"knowledge-capsule/app/middleware"
 	"knowledge-capsule/app/models"
+	"knowledge-capsule/pkg/logger"
 	"knowledge-capsule/pkg/utils"
 )
 
@@ -59,11 +61,12 @@ func GetCapsules(w http.ResponseWriter, r *http.Request) {
 
 	capsules, err := CapsuleStore.GetCapsulesByUser(userID, filters)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err)
+		utils.ErrorResponse(w, r, http.StatusInternalServerError, err)
 		return
 	}
 	page, limit := utils.ParsePagination(r)
 	paged, total := utils.SlicePage(capsules, page, limit)
+	logger.LogEvent(logger.EventCapsule, r, slog.String("action", "list"), slog.Int("count", len(paged)), slog.Int("total", total))
 	utils.JSONPaginatedResponse(w, http.StatusOK, "Capsules fetched", paged, page, limit, total)
 }
 
@@ -82,29 +85,30 @@ func CreateCapsule(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middleware.UserContextKey).(string)
 	var req models.CapsuleInput
 	if r.Body == nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, errors.New("empty request body"))
+		utils.ErrorResponse(w, r, http.StatusBadRequest, errors.New("empty request body"))
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	title := strings.TrimSpace(req.Title)
 	if title == "" {
-		utils.ErrorResponse(w, http.StatusBadRequest, &utils.ValidationError{Field: "title", Message: "cannot be empty"})
+		utils.ErrorResponse(w, r, http.StatusBadRequest, &utils.ValidationError{Field: "title", Message: "cannot be empty"})
 		return
 	}
 	if len(title) > maxTitleLen {
-		utils.ErrorResponse(w, http.StatusBadRequest, &utils.ValidationError{Field: "title", Message: "exceeds maximum length"})
+		utils.ErrorResponse(w, r, http.StatusBadRequest, &utils.ValidationError{Field: "title", Message: "exceeds maximum length"})
 		return
 	}
 
 	capsule, err := CapsuleStore.AddCapsule(userID, title, req.Content, req.Topic, []string(req.Tags), req.IsPrivate)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, err)
 		return
 	}
+	logger.LogEvent(logger.EventCapsule, r, slog.String("action", "create"), slog.String("capsule_id", capsule.ID), slog.String("title", title))
 	utils.JSONResponse(w, http.StatusCreated, true, "Capsule created", capsule)
 }
 
@@ -116,6 +120,6 @@ func CapsuleHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		CreateCapsule(w, r)
 	default:
-		utils.ErrorResponse(w, http.StatusMethodNotAllowed, nil)
+		utils.ErrorResponse(w, r, http.StatusMethodNotAllowed, nil)
 	}
 }

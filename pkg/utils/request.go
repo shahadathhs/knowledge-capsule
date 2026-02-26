@@ -10,11 +10,11 @@ import (
 func ParseAndValidateBody(w http.ResponseWriter, r *http.Request, v interface{}) bool {
 	// Decode JSON body
 	if r.Body == nil {
-		ErrorResponse(w, http.StatusBadRequest, errors.New("empty request body"))
+		ErrorResponse(w, r, http.StatusBadRequest, errors.New("empty request body"))
 		return false
 	}
 	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
-		ErrorResponse(w, http.StatusBadRequest, err)
+		ErrorResponse(w, r, http.StatusBadRequest, err)
 		return false
 	}
 
@@ -31,7 +31,7 @@ func ParseAndValidateBody(w http.ResponseWriter, r *http.Request, v interface{})
 
 		// If the field is a string and empty
 		if field.Kind() == reflect.String && field.String() == "" {
-			ErrorResponse(w, http.StatusBadRequest,
+			ErrorResponse(w, r, http.StatusBadRequest,
 				&ValidationError{Field: fieldType.Name, Message: "cannot be empty"})
 			return false
 		}

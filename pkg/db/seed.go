@@ -2,9 +2,9 @@ package db
 
 import (
 	"errors"
-	"log/slog"
 
 	"knowledge-capsule/app/models"
+	"knowledge-capsule/pkg/logger"
 	"knowledge-capsule/pkg/utils"
 
 	"gorm.io/gorm"
@@ -14,6 +14,7 @@ import (
 // Call after Open(). If email, password, name are all non-empty, ensures user exists with role=superadmin.
 func SeedSuperAdmin(db *gorm.DB, email, password, name string) error {
 	if email == "" || password == "" {
+		logger.Info(logger.EventSeed, logger.Attr("action", "skipped"), logger.Attr("reason", "email or password not set"))
 		return nil
 	}
 	if name == "" {
@@ -22,6 +23,7 @@ func SeedSuperAdmin(db *gorm.DB, email, password, name string) error {
 
 	hash, err := utils.HashPassword(password)
 	if err != nil {
+		logger.Error(logger.EventSeed, err, logger.Attr("action", "hash_password"), logger.Attr("email", email))
 		return err
 	}
 
@@ -34,13 +36,15 @@ func SeedSuperAdmin(db *gorm.DB, email, password, name string) error {
 			"password_hash": hash,
 			"role":          models.RoleSuperAdmin,
 		}).Error; err != nil {
+			logger.Error(logger.EventSeed, err, logger.Attr("action", "update_superadmin"), logger.Attr("email", email))
 			return err
 		}
-		slog.Info("Superadmin updated", "email", email)
+		logger.Info(logger.EventSeed, logger.Attr("action", "superadmin_updated"), logger.Attr("email", email), logger.Attr("user_id", existing.ID))
 		return nil
 	}
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Error(logger.EventSeed, err, logger.Attr("action", "find_superadmin"), logger.Attr("email", email))
 		return err
 	}
 
@@ -53,8 +57,9 @@ func SeedSuperAdmin(db *gorm.DB, email, password, name string) error {
 		Role:         models.RoleSuperAdmin,
 	}
 	if err := db.Create(&user).Error; err != nil {
+		logger.Error(logger.EventSeed, err, logger.Attr("action", "create_superadmin"), logger.Attr("email", email))
 		return err
 	}
-	slog.Info("Superadmin seeded", "email", email)
+	logger.Info(logger.EventSeed, logger.Attr("action", "superadmin_created"), logger.Attr("email", email), logger.Attr("user_id", user.ID))
 	return nil
 }

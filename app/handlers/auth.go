@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"time"
 
+	"knowledge-capsule/pkg/logger"
 	"knowledge-capsule/pkg/utils"
 )
 
@@ -35,9 +37,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := UserStore.AddUser(req.Name, req.Email, req.Password)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, err)
 		return
 	}
+	logger.LogEvent(logger.EventAuth, r, slog.String("action", "register"), slog.String("user_id", user.ID), slog.String("email", req.Email))
 
 	utils.JSONResponse(w, http.StatusCreated, true, "User registered", map[string]string{
 		"user_id": user.ID,
@@ -69,12 +72,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := UserStore.FindByEmail(req.Email)
 	if err != nil || user == nil {
-		utils.ErrorResponse(w, http.StatusUnauthorized, errors.New("invalid credentials"))
+		utils.ErrorResponse(w, r, http.StatusUnauthorized, errors.New("invalid credentials"))
 		return
 	}
 
 	if !utils.CheckPassword(req.Password, user.PasswordHash) {
-		utils.ErrorResponse(w, http.StatusUnauthorized, errors.New("invalid credentials"))
+		utils.ErrorResponse(w, r, http.StatusUnauthorized, errors.New("invalid credentials"))
 		return
 	}
 
@@ -84,9 +87,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	token, err := utils.GenerateJWT(user.ID, user.Email, role, time.Hour*24)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err)
+		utils.ErrorResponse(w, r, http.StatusInternalServerError, err)
 		return
 	}
+	logger.LogEvent(logger.EventAuth, r, slog.String("action", "login"), slog.String("user_id", user.ID), slog.String("email", req.Email))
 
 	utils.JSONResponse(w, http.StatusOK, true, "Login successful", map[string]string{
 		"token": token,

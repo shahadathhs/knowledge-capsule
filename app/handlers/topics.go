@@ -3,9 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"knowledge-capsule/app/models"
+	"knowledge-capsule/pkg/logger"
 	"knowledge-capsule/pkg/utils"
 )
 
@@ -30,11 +32,12 @@ func GetTopics(w http.ResponseWriter, r *http.Request) {
 
 	topics, err := TopicStore.GetAllTopics(filters)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err)
+		utils.ErrorResponse(w, r, http.StatusInternalServerError, err)
 		return
 	}
 	page, limit := utils.ParsePagination(r)
 	paged, total := utils.SlicePage(topics, page, limit)
+	logger.LogEvent(logger.EventTopic, r, slog.String("action", "list"), slog.Int("count", len(paged)), slog.Int("total", total))
 	utils.JSONPaginatedResponse(w, http.StatusOK, "Topics fetched", paged, page, limit, total)
 }
 
@@ -54,9 +57,10 @@ func CreateTopic(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&req)
 	topic, err := TopicStore.AddTopic(req.Name, req.Description)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, err)
 		return
 	}
+	logger.LogEvent(logger.EventTopic, r, slog.String("action", "create"), slog.String("topic_id", topic.ID), slog.String("name", req.Name))
 	utils.JSONResponse(w, http.StatusCreated, true, "Topic created", topic)
 }
 
@@ -68,6 +72,6 @@ func TopicHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		CreateTopic(w, r)
 	default:
-		utils.ErrorResponse(w, http.StatusMethodNotAllowed, errors.New("method not allowed"))
+		utils.ErrorResponse(w, r, http.StatusMethodNotAllowed, errors.New("method not allowed"))
 	}
 }

@@ -2,18 +2,19 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 
 	"knowledge-capsule/app/models"
+	"knowledge-capsule/pkg/contextkeys"
 	"knowledge-capsule/pkg/utils"
 )
 
-type contextKey string
-
-const (
-	UserContextKey = contextKey("user_id")
-	RoleContextKey = contextKey("user_role")
+// Re-export for handler convenience
+var (
+	UserContextKey = contextkeys.UserContextKey
+	RoleContextKey = contextkeys.RoleContextKey
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -28,12 +29,12 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		if tokenString == "" {
-			http.Error(w, "missing or invalid Authorization header or token", http.StatusUnauthorized)
+			utils.ErrorResponse(w, r, http.StatusUnauthorized, errors.New("missing or invalid Authorization header or token"))
 			return
 		}
 		claims, err := utils.VerifyJWT(tokenString)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			utils.ErrorResponse(w, r, http.StatusUnauthorized, err)
 			return
 		}
 
@@ -43,8 +44,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, UserContextKey, claims.UserID)
-		ctx = context.WithValue(ctx, RoleContextKey, role)
+		ctx = context.WithValue(ctx, contextkeys.UserContextKey, claims.UserID)
+		ctx = context.WithValue(ctx, contextkeys.RoleContextKey, role)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

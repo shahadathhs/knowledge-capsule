@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"knowledge-capsule/app/middleware"
 	"knowledge-capsule/app/models"
+	"knowledge-capsule/pkg/logger"
 	"knowledge-capsule/pkg/utils"
 )
 
@@ -15,12 +17,12 @@ import (
 func AdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/admin/users/")
 	if !strings.HasSuffix(path, "/role") {
-		utils.ErrorResponse(w, http.StatusNotFound, nil)
+		utils.ErrorResponse(w, r, http.StatusNotFound, nil)
 		return
 	}
 	id := strings.TrimSuffix(path, "/role")
 	if id == "" {
-		utils.ErrorResponse(w, http.StatusBadRequest, nil)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, nil)
 		return
 	}
 	SetUserRole(w, r)
@@ -46,7 +48,7 @@ func SetUserRole(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/admin/users/")
 	id := strings.TrimSuffix(path, "/role")
 	if id == "" {
-		utils.ErrorResponse(w, http.StatusBadRequest, nil)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, nil)
 		return
 	}
 
@@ -54,23 +56,24 @@ func SetUserRole(w http.ResponseWriter, r *http.Request) {
 		Role string `json:"role"`
 	}
 	if r.Body == nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, nil)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, nil)
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, err)
 		return
 	}
 	role := strings.TrimSpace(req.Role)
 	if role == "" {
-		utils.ErrorResponse(w, http.StatusBadRequest, nil)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, nil)
 		return
 	}
 
 	if err := UserStore.UpdateUserRole(id, role); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, err)
 		return
 	}
+	logger.LogEvent(logger.EventAdmin, r, slog.String("action", "set_role"), slog.String("target_user_id", id), slog.String("role", role))
 	utils.JSONResponse(w, http.StatusOK, true, "Role updated", map[string]string{"user_id": id, "role": role})
 }
 
@@ -94,7 +97,7 @@ func ListAdmins(w http.ResponseWriter, r *http.Request) {
 
 	admins, total, err := UserStore.ListAdmins(page, limit)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err)
+		utils.ErrorResponse(w, r, http.StatusInternalServerError, err)
 		return
 	}
 	utils.JSONPaginatedResponse(w, http.StatusOK, "Admins fetched", admins, page, limit, total)
@@ -126,7 +129,7 @@ func GlobalSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
-		utils.ErrorResponse(w, http.StatusBadRequest, nil)
+		utils.ErrorResponse(w, r, http.StatusBadRequest, nil)
 		return
 	}
 
@@ -141,7 +144,8 @@ func GlobalSearch(w http.ResponseWriter, r *http.Request) {
 	topics, _ := TopicStore.SearchTopics(q, limit)
 	capsules, _ := CapsuleStore.SearchAllCapsules(q, limit)
 
-	_ = r.Context().Value(middleware.UserContextKey) // ensure auth
+	adminID, _ := r.Context().Value(middleware.UserContextKey).(string)
+	logger.LogEvent(logger.EventSearch, r, slog.String("action", "global_search"), slog.String("query", q), slog.Int("users", len(users)), slog.Int("topics", len(topics)), slog.Int("capsules", len(capsules)), slog.String("admin_id", adminID))
 
 	result := GlobalSearchResult{
 		Users:    users,
