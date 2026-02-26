@@ -39,10 +39,17 @@ func (s *topicStore) AddTopic(name, description string) (*models.Topic, error) {
 	return &topic, nil
 }
 
-// GetAllTopics returns all topics.
-func (s *topicStore) GetAllTopics() ([]models.Topic, error) {
+// GetAllTopics returns topics with optional search filter.
+func (s *topicStore) GetAllTopics(filters *models.TopicFilters) ([]models.Topic, error) {
+	query := s.DB.Model(&models.Topic{})
+
+	if filters != nil && filters.Q != "" {
+		pattern := "%" + filters.Q + "%"
+		query = query.Where("name ILIKE ? OR description ILIKE ?", pattern, pattern)
+	}
+
 	var topics []models.Topic
-	if err := s.DB.Find(&topics).Error; err != nil {
+	if err := query.Find(&topics).Error; err != nil {
 		return nil, err
 	}
 	return topics, nil
@@ -88,4 +95,15 @@ func (s *topicStore) DeleteTopic(id string) error {
 		return errors.New("topic not found")
 	}
 	return nil
+}
+
+// SearchTopics searches topics by name or description.
+func (s *topicStore) SearchTopics(query string, limit int) ([]models.Topic, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	pattern := "%" + query + "%"
+	var topics []models.Topic
+	err := s.DB.Where("name ILIKE ? OR description ILIKE ?", pattern, pattern).Limit(limit).Find(&topics).Error
+	return topics, err
 }

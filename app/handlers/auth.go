@@ -78,7 +78,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.Email, time.Hour*24)
+	role := user.Role
+	if role == "" {
+		role = "user"
+	}
+	token, err := utils.GenerateJWT(user.ID, user.Email, role, time.Hour*24)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err)
 		return

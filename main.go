@@ -58,6 +58,12 @@ func main() {
 	}
 
 	handlers.InitStores(database)
+
+	if err := db.SeedSuperAdmin(database, cfg.SuperAdminEmail, cfg.SuperAdminPassword, cfg.SuperAdminName); err != nil {
+		slog.Error("Failed to seed superadmin", "error", err)
+		os.Exit(1)
+	}
+
 	handlers.InitChat(cfg.CORSOrigins)
 
 	mux := http.NewServeMux()
@@ -76,12 +82,20 @@ func main() {
 	mux.HandleFunc("/api/auth/register", handlers.RegisterHandler)
 	mux.HandleFunc("/api/auth/login", handlers.LoginHandler)
 
+	// User routes
+	mux.Handle("/api/users", middleware.AuthMiddleware(middleware.RequireAdmin(http.HandlerFunc(handlers.ListUsers))))
+	mux.Handle("/api/users/", middleware.AuthMiddleware(http.HandlerFunc(handlers.UserHandler)))
+
+	// Admin routes
+	mux.Handle("/api/admin/search", middleware.AuthMiddleware(middleware.RequireAdmin(http.HandlerFunc(handlers.GlobalSearch))))
+	mux.Handle("/api/admin/admins", middleware.AuthMiddleware(middleware.RequireSuperAdmin(http.HandlerFunc(handlers.ListAdmins))))
+	mux.Handle("/api/admin/users/", middleware.AuthMiddleware(middleware.RequireSuperAdmin(http.HandlerFunc(handlers.AdminUsersHandler))))
+
 	// Protected routes
 	mux.Handle("/api/topics", middleware.AuthMiddleware(http.HandlerFunc(handlers.TopicHandler)))
 	mux.Handle("/api/topics/", middleware.AuthMiddleware(http.HandlerFunc(handlers.TopicByIDHandler)))
 	mux.Handle("/api/capsules", middleware.AuthMiddleware(http.HandlerFunc(handlers.CapsuleHandler)))
 	mux.Handle("/api/capsules/", middleware.AuthMiddleware(http.HandlerFunc(handlers.CapsuleByIDHandler)))
-	mux.Handle("/api/search", middleware.AuthMiddleware(http.HandlerFunc(handlers.SearchHandler)))
 
 	// Chat & File Upload
 	mux.Handle("/ws/chat", middleware.AuthMiddleware(http.HandlerFunc(handlers.ChatWebSocketHandler)))

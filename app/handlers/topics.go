@@ -11,18 +11,24 @@ import (
 
 // GetTopics godoc
 // @Summary Get topics
-// @Description Get all topics (paginated)
+// @Description Get all topics (paginated, filterable)
 // @Tags topics
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param page query int false "Page number (default 1)"
 // @Param limit query int false "Items per page (default 20, max 100)"
+// @Param q query string false "Search in name or description"
 // @Success 200 {object} models.PaginatedResponse "Paginated list: data, page, limit, total"
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/topics [get]
 func GetTopics(w http.ResponseWriter, r *http.Request) {
-	topics, err := TopicStore.GetAllTopics()
+	var filters *models.TopicFilters
+	if q := r.URL.Query().Get("q"); q != "" {
+		filters = &models.TopicFilters{Q: q}
+	}
+
+	topics, err := TopicStore.GetAllTopics(filters)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err)
 		return

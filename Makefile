@@ -19,7 +19,7 @@ GOBIN ?= $(CURDIR)/.bin
 BIN_DIR := $(GOBIN)
 
 # Convenience
-.PHONY: all help install hooks run build-local build build-dev push push-dev \
+.PHONY: all help install hooks run stop build-local build build-dev push push-dev \
 	clean fmt vet tidy up down up-dev down-dev restart restart-dev logs logs-dev \
 	containers volumes networks images g-jwt swagger db down-db
 
@@ -41,6 +41,7 @@ help:
 	@echo "  make up-dev                 Start development compose profile"
 	@echo "  make down-dev               Stop development compose profile"
 	@echo "  make run                    Run local dev server with air (uses local .bin)"
+	@echo "  make stop                   Stop local dev server (air / tmp/server)"
 	@echo "  make hooks                  Install git hooks (lefthook)"
 	@echo "  make install                Install dev tools into $(GOBIN)"
 	@echo "  make fmt                    Run go fmt ./..."
@@ -79,6 +80,12 @@ hooks: install
 run: install
 	@echo "🚀 Starting API (with live reload locally)..."
 	@$(GOBIN)/air || air
+
+stop:
+	@echo "🛑 Stopping local dev server..."
+	@pkill -f "$(BUILD_OUT)" 2>/dev/null || true
+	@pkill -f "$(CURDIR)/.bin/air" 2>/dev/null || true
+	@echo "✅ Stopped"
 
 # -------------------------
 # Build & test

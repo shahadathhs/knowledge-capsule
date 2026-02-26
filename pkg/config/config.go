@@ -8,11 +8,14 @@ import (
 )
 
 type Config struct {
-	Port        string
-	Env         string
-	JWTSecret   string
-	CORSOrigins []string
-	DatabaseURL string
+	Port               string
+	Env                string
+	JWTSecret          string
+	CORSOrigins        []string
+	DatabaseURL        string
+	SuperAdminEmail    string
+	SuperAdminPassword string
+	SuperAdminName     string
 }
 
 // loadEnv reads .env file and sets environment variables. Ignores if file does not exist.
@@ -67,11 +70,14 @@ func Load() (Config, error) {
 	}
 
 	return Config{
-		Port:        port,
-		Env:         env,
-		JWTSecret:   jwtSecret,
-		CORSOrigins: corsOrigins,
-		DatabaseURL: databaseURL,
+		Port:               port,
+		Env:                env,
+		JWTSecret:          jwtSecret,
+		CORSOrigins:        corsOrigins,
+		DatabaseURL:        databaseURL,
+		SuperAdminEmail:    os.Getenv("SUPERADMIN_EMAIL"),
+		SuperAdminPassword: os.Getenv("SUPERADMIN_PASSWORD"),
+		SuperAdminName:     os.Getenv("SUPERADMIN_NAME"),
 	}, nil
 }
 

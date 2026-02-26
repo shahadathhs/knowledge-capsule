@@ -1,5 +1,20 @@
 basePath: /
 definitions:
+  handlers.GlobalSearchResult:
+    properties:
+      capsules:
+        items:
+          $ref: '#/definitions/models.Capsule'
+        type: array
+      topics:
+        items:
+          $ref: '#/definitions/models.Topic'
+        type: array
+      users:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+    type: object
   models.Capsule:
     properties:
       content:
@@ -90,6 +105,23 @@ definitions:
         example: Golang
         type: string
     type: object
+  models.User:
+    properties:
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -103,6 +135,114 @@ info:
   title: Knowledge Capsule
   version: "1.0"
 paths:
+  /api/admin/admins:
+    get:
+      consumes:
+      - application/json
+      description: List users with role admin or superadmin
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginatedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List admins (superadmin only)
+      tags:
+      - admin
+  /api/admin/search:
+    get:
+      consumes:
+      - application/json
+      description: Search across users, topics, and capsules
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Max results per type (default 10)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.GlobalSearchResult'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Global search (admin only)
+      tags:
+      - admin
+  /api/admin/users/{id}/role:
+    post:
+      consumes:
+      - application/json
+      description: 'Set role for a user: user, admin, or superadmin'
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 'role: user|admin|superadmin'
+        in: body
+        name: input
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Set user role (superadmin only)
+      tags:
+      - admin
   /api/auth/login:
     post:
       consumes:
@@ -175,7 +315,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get all capsules for the user (paginated)
+      description: Get all capsules for the user (paginated, filterable)
       parameters:
       - description: Page number (default 1)
         in: query
@@ -185,6 +325,22 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Filter by topic
+        in: query
+        name: topic
+        type: string
+      - description: Filter by tags (comma-separated)
+        in: query
+        name: tags
+        type: string
+      - description: Search in title, content, tags
+        in: query
+        name: q
+        type: string
+      - description: Filter by is_private
+        in: query
+        name: is_private
+        type: boolean
       produces:
       - application/json
       responses:
@@ -324,47 +480,11 @@ paths:
       summary: Update capsule by ID
       tags:
       - capsules
-  /api/search:
-    get:
-      consumes:
-      - application/json
-      description: Search capsules by query string (paginated)
-      parameters:
-      - description: Search query
-        in: query
-        name: q
-        required: true
-        type: string
-      - description: Page number (default 1)
-        in: query
-        name: page
-        type: integer
-      - description: Items per page (default 20, max 100)
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 'Paginated list: data, page, limit, total'
-          schema:
-            $ref: '#/definitions/models.PaginatedResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Search capsules
-      tags:
-      - search
   /api/topics:
     get:
       consumes:
       - application/json
-      description: Get all topics (paginated)
+      description: Get all topics (paginated, filterable)
       parameters:
       - description: Page number (default 1)
         in: query
@@ -374,6 +494,10 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Search in name or description
+        in: query
+        name: q
+        type: string
       produces:
       - application/json
       responses:
@@ -513,6 +637,128 @@ paths:
       summary: Update topic by ID
       tags:
       - topics
+  /api/users:
+    get:
+      consumes:
+      - application/json
+      description: Paginated list with optional search and role filter
+      parameters:
+      - description: Search by name or email
+        in: query
+        name: q
+        type: string
+      - description: Filter by role (user, admin, superadmin)
+        in: query
+        name: role
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginatedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List users (admin only)
+      tags:
+      - users
+  /api/users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get any user's profile by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user by ID (admin only)
+      tags:
+      - users
+  /api/users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get the authenticated user's profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Update name and/or avatar_url
+      parameters:
+      - description: name, avatar_url (optional)
+        in: body
+        name: input
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update current user profile
+      tags:
+      - users
   /health:
     get:
       description: Check if the service is running

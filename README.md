@@ -13,6 +13,10 @@ Perfect for personal knowledge bases, team learning platforms, or lightweight do
 * 🔍 **Powerful Search** – Search capsules by title or content
 * 🏷️ **Tagging System** – Add tags for deeper filtering
 * 💾 **PostgreSQL + GORM** – Persistent database storage
+* 👤 **RBAC** – Roles: user, admin, superadmin (role assignment by admin/superadmin)
+* 👥 **User Management** – Profile, avatar, list users (admin), admin team (superadmin)
+* 🔍 **Global Search** – Admin-only search across users, topics, capsules
+* 📋 **Filtering** – Query params on GET endpoints (topic, tags, q, is_private, role)
 * 💬 **Real-time Chat** – Fully WebSocket-based (send messages, fetch history over socket)
 * 📂 **File Uploads** – Upload and serve files locally
 
@@ -53,6 +57,9 @@ Required variables:
 | `POSTGRES_USER` | DB user (for Docker Compose) |
 | `POSTGRES_PASSWORD` | DB password |
 | `POSTGRES_DB` | Database name |
+| `SUPERADMIN_EMAIL` | (Optional) Superadmin email – creates/updates on startup |
+| `SUPERADMIN_PASSWORD` | (Optional) Superadmin password |
+| `SUPERADMIN_NAME` | (Optional) Superadmin display name |
 
 💡 Generate JWT secret: `make g-jwt`
 
@@ -144,9 +151,14 @@ Body:
 
 **POST** `/api/auth/login`
 
+## 👤 **User & Profile** (Requires JWT)
+
+* 📥 **GET** `/api/users/me` – Current user profile (id, name, email, role, avatar_url)
+* ✏️ **PATCH** `/api/users/me` – Update name, avatar_url
+
 ## 🗂️ **Topic Management** (Requires JWT)
 
-* 📥 **GET** `/api/topics?page=1&limit=20` – Fetch topics (paginated)
+* 📥 **GET** `/api/topics?page=1&limit=20&q=<search>` – Fetch topics (paginated, filterable)
 * ➕ **POST** `/api/topics` – Create topic
 * ✏️ **PUT** `/api/topics/{id}` – Update topic
 * 🗑️ **DELETE** `/api/topics/{id}` – Delete topic
@@ -169,7 +181,7 @@ Body:
 
 ### 📥 Get Capsules
 
-**GET** `/api/capsules?page=1&limit=20`
+**GET** `/api/capsules?page=1&limit=20&topic=&tags=&q=&is_private=` (all query params optional)
 
 ### ✏️ Update Capsule
 
@@ -179,9 +191,21 @@ Body:
 
 **DELETE** `/api/capsules/{id}`
 
-## 🔍 **Search Capsules**
+## 🔍 **Search & Filter**
 
-**GET** `/api/search?q=<query>&page=1&limit=20`
+**GET endpoints support search + filter** via query params (`q`, `page`, `limit`, etc.):
+- `GET /api/capsules?q=&topic=&tags=&is_private=` – Search/filter capsules (owner only)
+- `GET /api/topics?q=` – Search/filter topics
+- `GET /api/users?q=&role=` – Search/filter users (admin only)
+
+**GET** `/api/admin/search?q=<query>&limit=10` – **Global search** (admin only): searches users, topics, and capsules in one request
+
+## 👥 **Admin** (Admin/Superadmin)
+
+* 📥 **GET** `/api/users` – List users (admin, paginated: `q`, `role`, `page`, `limit`)
+* 📥 **GET** `/api/users/{id}` – Get user by ID (admin)
+* 📥 **GET** `/api/admin/admins` – List admins (superadmin only)
+* ✏️ **POST** `/api/admin/users/{id}/role` – Set user role (superadmin only): `{"role":"user|admin|superadmin"}`
 
 ## ❤️‍🩹 **Health Check**
 

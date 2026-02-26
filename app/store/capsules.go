@@ -39,10 +39,31 @@ func (s *capsuleStore) AddCapsule(userID, title, content, topic string, tags []s
 	return &capsule, nil
 }
 
-// GetCapsulesByUser returns all capsules owned by a specific user.
-func (s *capsuleStore) GetCapsulesByUser(userID string) ([]models.Capsule, error) {
+// GetCapsulesByUser returns capsules owned by a user with optional filters.
+func (s *capsuleStore) GetCapsulesByUser(userID string, filters *models.CapsuleFilters) ([]models.Capsule, error) {
+	query := s.DB.Where("user_id = ?", userID)
+
+	if filters != nil {
+		if filters.Topic != "" {
+			query = query.Where("topic ILIKE ?", "%"+filters.Topic+"%")
+		}
+		if len(filters.Tags) > 0 {
+			for _, tag := range filters.Tags {
+				query = query.Where("tags::text ILIKE ?", "%"+tag+"%")
+			}
+		}
+		if filters.Q != "" {
+			pattern := "%" + strings.ToLower(filters.Q) + "%"
+			query = query.Where("LOWER(title) LIKE ? OR LOWER(content) LIKE ? OR tags::text ILIKE ?",
+				pattern, pattern, pattern)
+		}
+		if filters.IsPrivate != nil {
+			query = query.Where("is_private = ?", *filters.IsPrivate)
+		}
+	}
+
 	var capsules []models.Capsule
-	if err := s.DB.Where("user_id = ?", userID).Find(&capsules).Error; err != nil {
+	if err := query.Find(&capsules).Error; err != nil {
 		return nil, err
 	}
 	return capsules, nil
@@ -93,15 +114,14 @@ func (s *capsuleStore) DeleteCapsule(id, userID string) error {
 	return nil
 }
 
-// SearchCapsules performs a simple case-insensitive keyword search.
-func (s *capsuleStore) SearchCapsules(userID, query string) ([]models.Capsule, error) {
-	query = strings.ToLower(query)
-	pattern := "%" + query + "%"
-	var capsules []models.Capsule
-	err := s.DB.Where("user_id = ? AND (LOWER(title) LIKE ? OR LOWER(content) LIKE ? OR tags::text ILIKE ?)",
-		userID, pattern, pattern, pattern).Find(&capsules).Error
-	if err != nil {
-		return nil, err
+// SearchAllCapsules searches all capsules (admin only, no user filter).
+func (s *capsuleStore) SearchAllCapsules(query string, limit int) ([]models.Capsule, error) {
+	if limit <= 0 {
+		limit = 20
 	}
-	return capsules, nil
+	pattern := "%" + strings.ToLower(query) + "%"
+	var capsules []models.Capsule
+	err := s.DB.Where("LOWER(title) LIKE ? OR LOWER(content) LIKE ? OR tags::text ILIKE ?",
+		pattern, pattern, pattern).Limit(limit).Find(&capsules).Error
+	return capsules, err
 }

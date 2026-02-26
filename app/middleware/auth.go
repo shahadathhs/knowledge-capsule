@@ -5,12 +5,16 @@ import (
 	"net/http"
 	"strings"
 
+	"knowledge-capsule/app/models"
 	"knowledge-capsule/pkg/utils"
 )
 
 type contextKey string
 
-const UserContextKey = contextKey("user_id")
+const (
+	UserContextKey = contextKey("user_id")
+	RoleContextKey = contextKey("user_role")
+)
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +37,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserContextKey, claims.UserID)
+		role := claims.Role
+		if role == "" {
+			role = models.RoleUser
+		}
+
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, UserContextKey, claims.UserID)
+		ctx = context.WithValue(ctx, RoleContextKey, role)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
