@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"knowledge-capsule-api/app/models"
+	"knowledge-capsule/app/models"
 )
 
 var secretKey []byte
@@ -29,7 +29,10 @@ func GenerateJWT(userID, email string, expiry time.Duration) (string, error) {
 		Exp:    time.Now().Add(expiry).Unix(),
 	}
 
-	payloadBytes, _ := json.Marshal(claims)
+	payloadBytes, err := json.Marshal(claims)
+	if err != nil {
+		return "", err
+	}
 	payload := base64.URLEncoding.EncodeToString(payloadBytes)
 
 	unsignedToken := header + "." + payload

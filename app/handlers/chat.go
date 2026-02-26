@@ -2,22 +2,26 @@ package handlers
 
 import (
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"sync"
 
-	"knowledge-capsule-api/app/middleware"
-	"knowledge-capsule-api/app/models"
-	"knowledge-capsule-api/app/store"
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/app/middleware"
+	"knowledge-capsule/app/models"
+	"knowledge-capsule/app/store"
+	"knowledge-capsule/pkg/utils"
 
 	"github.com/gorilla/websocket"
 )
 
 var (
-	upgrader = websocket.Upgrader{
+	corsOrigins []string
+	upgrader    = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
-			return true // Allow all origins for now
+			if len(corsOrigins) == 0 {
+				return false
+			}
+			return middleware.IsOriginAllowed(r.Header.Get("Origin"), corsOrigins)
 		},
 	}
 	clients   = make(map[string]*websocket.Conn) // UserID -> Conn
@@ -25,8 +29,9 @@ var (
 	msgStore  = store.MessageStore{FileStore: store.FileStore[models.Message]{FilePath: "data/messages.json"}}
 )
 
-// InitChatStore initializes the chat storage.
-func InitChatStore() error {
+// InitChat initializes the chat storage and CORS for WebSocket.
+func InitChat(allowedOrigins []string) error {
+	corsOrigins = allowedOrigins
 	return msgStore.FileStore.Init()
 }
 
@@ -46,7 +51,7 @@ func ChatWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("Upgrade error:", err)
+		slog.Error("WebSocket upgrade error", "error", err)
 		return
 	}
 	defer conn.Close()
@@ -65,14 +70,14 @@ func ChatWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 		var msg ChatMessage
 		err := conn.ReadJSON(&msg)
 		if err != nil {
-			log.Println("Read error:", err)
+			slog.Error("WebSocket read error", "error", err)
 			break
 		}
 
 		// Save message
 		savedMsg, err := msgStore.SaveMessage(userID, msg.ReceiverID, msg.Content, msg.Type, msg.FileURL)
 		if err != nil {
-			log.Println("Save error:", err)
+			slog.Error("Chat save error", "error", err)
 			continue
 		}
 
@@ -83,12 +88,25 @@ func ChatWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 
 		if ok {
 			if err := receiverConn.WriteJSON(savedMsg); err != nil {
-				log.Println("Write error:", err)
+				slog.Error("WebSocket write error", "error", err)
 			}
 		}
 	}
 }
 
+// GetChatHistoryHandler godoc
+// @Summary Get chat history
+// @Description Get paginated chat history between current user and another user
+// @Tags chat
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param user_id query string true "Other user ID"
+// @Param page query int false "Page number (default 1)"
+// @Param limit query int false "Items per page (default 20, max 100)"
+// @Success 200 {object} models.PaginatedResponse "Paginated messages: data, page, limit, total"
+// @Failure 400 {object} map[string]interface{}
+// @Router /api/chat/history [get]
 func GetChatHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserContextKey).(string)
 	if !ok {
@@ -108,5 +126,7 @@ func GetChatHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.JSONResponse(w, http.StatusOK, true, "Messages fetched successfully", messages)
+	page, limit := utils.ParsePagination(r)
+	paged, total := utils.SlicePage(messages, page, limit)
+	utils.JSONPaginatedResponse(w, http.StatusOK, "Messages fetched successfully", paged, page, limit, total)
 }

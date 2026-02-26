@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/pkg/utils"
 )
 
 // UploadHandler handles file uploads.

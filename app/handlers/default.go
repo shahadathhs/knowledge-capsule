@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/pkg/utils"
 )
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +39,6 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.JSONResponse(w, http.StatusOK, true, "Service is healthy", map[string]string{
-		"service": "knowledge-capsule-api",
+		"service": "knowledge-capsule",
 	})
 }

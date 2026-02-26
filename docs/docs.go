@@ -134,7 +134,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all capsules for the user or create a new one",
+                "description": "Get all capsules for the user (paginated) or create a new one",
                 "consumes": [
                     "application/json"
                 ],
@@ -147,6 +147,18 @@ const docTemplate = `{
                 "summary": "Get or create capsules",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
                         "description": "Capsule info (for POST)",
                         "name": "input",
                         "in": "body",
@@ -158,12 +170,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Paginated list: data, page, limit, total",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Capsule"
-                            }
+                            "$ref": "#/definitions/models.PaginatedResponse"
                         }
                     },
                     "201": {
@@ -187,7 +196,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all capsules for the user or create a new one",
+                "description": "Get all capsules for the user (paginated) or create a new one",
                 "consumes": [
                     "application/json"
                 ],
@@ -200,6 +209,18 @@ const docTemplate = `{
                 "summary": "Get or create capsules",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
                         "description": "Capsule info (for POST)",
                         "name": "input",
                         "in": "body",
@@ -211,18 +232,226 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Paginated list: data, page, limit, total",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Capsule"
-                            }
+                            "$ref": "#/definitions/models.PaginatedResponse"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/models.Capsule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/capsules/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get, update, or delete a single capsule (user must own it)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "capsules"
+                ],
+                "summary": "Get, update, or delete a capsule by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Capsule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated capsule fields (for PUT)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Capsule"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Capsule fetched or updated",
+                        "schema": {
+                            "$ref": "#/definitions/models.Capsule"
+                        }
+                    },
+                    "404": {
+                        "description": "Capsule not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get, update, or delete a single capsule (user must own it)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "capsules"
+                ],
+                "summary": "Get, update, or delete a capsule by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Capsule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated capsule fields (for PUT)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Capsule"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Capsule fetched or updated",
+                        "schema": {
+                            "$ref": "#/definitions/models.Capsule"
+                        }
+                    },
+                    "404": {
+                        "description": "Capsule not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get, update, or delete a single capsule (user must own it)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "capsules"
+                ],
+                "summary": "Get, update, or delete a capsule by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Capsule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated capsule fields (for PUT)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Capsule"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Capsule fetched or updated",
+                        "schema": {
+                            "$ref": "#/definitions/models.Capsule"
+                        }
+                    },
+                    "404": {
+                        "description": "Capsule not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/chat/history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated chat history between current user and another user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Get chat history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Other user ID",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated messages: data, page, limit, total",
+                        "schema": {
+                            "$ref": "#/definitions/models.PaginatedResponse"
                         }
                     },
                     "400": {
@@ -242,7 +471,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Search capsules by query string",
+                "description": "Search capsules by query string (paginated)",
                 "consumes": [
                     "application/json"
                 ],
@@ -260,16 +489,25 @@ const docTemplate = `{
                         "name": "q",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Paginated list: data, page, limit, total",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Capsule"
-                            }
+                            "$ref": "#/definitions/models.PaginatedResponse"
                         }
                     },
                     "400": {
@@ -289,7 +527,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all topics or create a new one",
+                "description": "Get all topics (paginated) or create a new one",
                 "consumes": [
                     "application/json"
                 ],
@@ -302,6 +540,18 @@ const docTemplate = `{
                 "summary": "Get or create topics",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
                         "description": "Topic info (for POST)",
                         "name": "input",
                         "in": "body",
@@ -313,12 +563,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Paginated list: data, page, limit, total",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Topic"
-                            }
+                            "$ref": "#/definitions/models.PaginatedResponse"
                         }
                     },
                     "201": {
@@ -342,7 +589,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all topics or create a new one",
+                "description": "Get all topics (paginated) or create a new one",
                 "consumes": [
                     "application/json"
                 ],
@@ -355,6 +602,18 @@ const docTemplate = `{
                 "summary": "Get or create topics",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
                         "description": "Topic info (for POST)",
                         "name": "input",
                         "in": "body",
@@ -366,12 +625,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Paginated list: data, page, limit, total",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Topic"
-                            }
+                            "$ref": "#/definitions/models.PaginatedResponse"
                         }
                     },
                     "201": {
@@ -382,6 +638,161 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/topics/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get, update, or delete a single topic",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "topics"
+                ],
+                "summary": "Get, update, or delete a topic by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Topic ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated topic fields (for PUT)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Topic"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Topic fetched or updated",
+                        "schema": {
+                            "$ref": "#/definitions/models.Topic"
+                        }
+                    },
+                    "404": {
+                        "description": "Topic not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get, update, or delete a single topic",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "topics"
+                ],
+                "summary": "Get, update, or delete a topic by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Topic ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated topic fields (for PUT)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Topic"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Topic fetched or updated",
+                        "schema": {
+                            "$ref": "#/definitions/models.Topic"
+                        }
+                    },
+                    "404": {
+                        "description": "Topic not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get, update, or delete a single topic",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "topics"
+                ],
+                "summary": "Get, update, or delete a topic by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Topic ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated topic fields (for PUT)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Topic"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Topic fetched or updated",
+                        "schema": {
+                            "$ref": "#/definitions/models.Topic"
+                        }
+                    },
+                    "404": {
+                        "description": "Topic not found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -450,6 +861,27 @@ const docTemplate = `{
                 }
             }
         },
+        "models.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "limit": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Topic": {
             "type": "object",
             "properties": {
@@ -479,8 +911,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Knowledge Capsule API",
-	Description:      "This is a sample server for Knowledge Capsule API.",
+	Title:            "Knowledge Capsule",
+	Description:      "Knowledge Capsule - knowledge management backend.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

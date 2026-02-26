@@ -1,21 +1,47 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
 	"os"
-
-	"github.com/joho/godotenv"
+	"strings"
 )
 
 type Config struct {
-	Port      string
-	Env       string
-	JWTSecret string
+	Port        string
+	Env         string
+	JWTSecret   string
+	CORSOrigins []string
+}
+
+// loadEnv reads .env file and sets environment variables. Ignores if file does not exist.
+func loadEnv() {
+	f, err := os.Open(".env")
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if idx := strings.Index(line, "="); idx > 0 {
+			key := strings.TrimSpace(line[:idx])
+			val := strings.TrimSpace(line[idx+1:])
+			// Remove surrounding quotes if present
+			if len(val) >= 2 && (val[0] == '"' && val[len(val)-1] == '"' || val[0] == '\'' && val[len(val)-1] == '\'') {
+				val = val[1 : len(val)-1]
+			}
+			os.Setenv(key, val)
+		}
+	}
 }
 
 func Load() (Config, error) {
-	// Load .env file if it exists
-	_ = godotenv.Load()
+	loadEnv()
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -32,9 +58,26 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("missing required environment variable: JWT_SECRET")
 	}
 
+	corsOrigins := parseCORSOrigins(os.Getenv("CORS_ORIGINS"), env)
+
 	return Config{
-		Port:      port,
-		Env:       env,
-		JWTSecret: jwtSecret,
+		Port:        port,
+		Env:         env,
+		JWTSecret:   jwtSecret,
+		CORSOrigins: corsOrigins,
 	}, nil
+}
+
+func parseCORSOrigins(envVal, goEnv string) []string {
+	if envVal != "" {
+		origins := strings.Split(envVal, ",")
+		for i := range origins {
+			origins[i] = strings.TrimSpace(origins[i])
+		}
+		return origins
+	}
+	if goEnv == "development" {
+		return []string{"http://localhost:3000", "http://localhost:8080", "http://localhost:8081", "http://127.0.0.1:3000", "http://127.0.0.1:8080", "http://127.0.0.1:8081"}
+	}
+	return nil
 }

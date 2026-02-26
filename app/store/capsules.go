@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"knowledge-capsule-api/app/models"
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/app/models"
+	"knowledge-capsule/pkg/utils"
 )
 
 type CapsuleStore struct {

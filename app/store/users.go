@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"knowledge-capsule-api/app/models"
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/app/models"
+	"knowledge-capsule/pkg/utils"
 )
 
 type UserStore struct {
@@ -26,11 +26,16 @@ func (s *UserStore) AddUser(name, email, password string) (*models.User, error) 
 		}
 	}
 
+	passwordHash, err := utils.HashPassword(password)
+	if err != nil {
+		return nil, err
+	}
+
 	newUser := models.User{
 		ID:           utils.GenerateUUID(),
 		Name:         name,
 		Email:        email,
-		PasswordHash: utils.HashPassword(password),
+		PasswordHash: passwordHash,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}

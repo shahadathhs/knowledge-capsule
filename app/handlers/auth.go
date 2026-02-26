@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"knowledge-capsule-api/app/models"
-	"knowledge-capsule-api/app/store"
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/app/models"
+	"knowledge-capsule/app/store"
+	"knowledge-capsule/pkg/utils"
 )
 
 var UserStore = &store.UserStore{FileStore: store.FileStore[models.User]{FilePath: "data/users.json"}}

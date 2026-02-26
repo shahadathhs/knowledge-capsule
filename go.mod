@@ -1,4 +1,4 @@
-module knowledge-capsule-api
+module knowledge-capsule
 
 go 1.25.3
 
@@ -6,7 +6,6 @@ require (
 	github.com/air-verse/air v1.63.0
 	github.com/evilmartians/lefthook v1.13.6
 	github.com/gorilla/websocket v1.5.3
-	github.com/joho/godotenv v1.5.1
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6
 )

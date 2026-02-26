@@ -1,22 +1,23 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
-	"knowledge-capsule-api/app/handlers"
-	"knowledge-capsule-api/app/middleware"
-	_ "knowledge-capsule-api/docs"
-	"knowledge-capsule-api/pkg/config"
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/app/handlers"
+	"knowledge-capsule/app/middleware"
+	_ "knowledge-capsule/docs"
+	"knowledge-capsule/pkg/config"
+	"knowledge-capsule/pkg/utils"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// @title Knowledge Capsule API
+// @title Knowledge Capsule
 // @version 1.0
-// @description This is a sample server for Knowledge Capsule API.
+// @description Knowledge Capsule - knowledge management backend.
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
@@ -28,6 +29,22 @@ import (
 
 // @BasePath /
 func main() {
+	// Load env variables first (for log level)
+	cfg, err := config.Load()
+	if err != nil {
+		slog.Error("Failed to load environment variables", "error", err)
+		os.Exit(1)
+	}
+
+	// Set log level based on environment
+	var level slog.Level
+	if cfg.Env == "development" {
+		level = slog.LevelDebug
+	} else {
+		level = slog.LevelInfo
+	}
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})))
+
 	mux := http.NewServeMux()
 
 	// Default routes
@@ -45,7 +62,9 @@ func main() {
 
 	// Protected routes
 	mux.Handle("/api/topics", middleware.AuthMiddleware(http.HandlerFunc(handlers.TopicHandler)))
+	mux.Handle("/api/topics/", middleware.AuthMiddleware(http.HandlerFunc(handlers.TopicByIDHandler)))
 	mux.Handle("/api/capsules", middleware.AuthMiddleware(http.HandlerFunc(handlers.CapsuleHandler)))
+	mux.Handle("/api/capsules/", middleware.AuthMiddleware(http.HandlerFunc(handlers.CapsuleByIDHandler)))
 	mux.Handle("/api/search", middleware.AuthMiddleware(http.HandlerFunc(handlers.SearchHandler)))
 
 	// Chat & File Upload
@@ -54,20 +73,15 @@ func main() {
 	mux.Handle("/api/upload", middleware.AuthMiddleware(http.HandlerFunc(handlers.UploadHandler)))
 	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("data/uploads"))))
 
-	// Wrap with logger + recover
-	handler := middleware.Recover(middleware.Logger(mux))
-
-	// Load env variables
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatal("Failed to load environment variables: ", err)
-	}
+	// Wrap with CORS, logger, recover
+	handler := middleware.CORS(cfg.CORSOrigins)(middleware.Recover(middleware.Logger(mux)))
 
 	utils.InitJWTSecret(cfg.JWTSecret)
 
-	// Initialize Chat Store
-	if err := handlers.InitChatStore(); err != nil {
-		log.Fatal("Failed to initialize chat store: ", err)
+	// Initialize Chat
+	if err := handlers.InitChat(cfg.CORSOrigins); err != nil {
+		slog.Error("Failed to initialize chat store", "error", err)
+		os.Exit(1)
 	}
 
 	server := &http.Server{
@@ -77,6 +91,9 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	log.Printf("Server running in %s mode on port %s\n", cfg.Env, cfg.Port)
-	log.Fatal(server.ListenAndServe())
+	slog.Info("Server starting", "env", cfg.Env, "port", cfg.Port)
+	if err := server.ListenAndServe(); err != nil {
+		slog.Error("Server failed", "error", err)
+		os.Exit(1)
+	}
 }

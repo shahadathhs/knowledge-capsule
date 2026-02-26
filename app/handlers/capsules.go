@@ -2,25 +2,31 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strings"
 
-	"knowledge-capsule-api/app/middleware"
-	"knowledge-capsule-api/app/models"
-	"knowledge-capsule-api/app/store"
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/app/middleware"
+	"knowledge-capsule/app/models"
+	"knowledge-capsule/app/store"
+	"knowledge-capsule/pkg/utils"
 )
+
+const maxTitleLen = 500
 
 var CapsuleStore = &store.CapsuleStore{FileStore: store.FileStore[models.Capsule]{FilePath: "data/capsules.json"}}
 
 // CapsuleHandler godoc
 // @Summary Get or create capsules
-// @Description Get all capsules for the user or create a new one
+// @Description Get all capsules for the user (paginated) or create a new one
 // @Tags capsules
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
+// @Param page query int false "Page number (default 1)"
+// @Param limit query int false "Items per page (default 20, max 100)"
 // @Param input body models.Capsule true "Capsule info (for POST)"
-// @Success 200 {array} models.Capsule
+// @Success 200 {object} models.PaginatedResponse "Paginated list: data, page, limit, total"
 // @Success 201 {object} models.Capsule
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/capsules [get]
@@ -30,8 +36,14 @@ func CapsuleHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		capsules, _ := CapsuleStore.GetCapsulesByUser(userID)
-		utils.JSONResponse(w, http.StatusOK, true, "Capsules fetched", capsules)
+		capsules, err := CapsuleStore.GetCapsulesByUser(userID)
+		if err != nil {
+			utils.ErrorResponse(w, http.StatusInternalServerError, err)
+			return
+		}
+		page, limit := utils.ParsePagination(r)
+		paged, total := utils.SlicePage(capsules, page, limit)
+		utils.JSONPaginatedResponse(w, http.StatusOK, "Capsules fetched", paged, page, limit, total)
 
 	case http.MethodPost:
 		var req struct {
@@ -41,9 +53,26 @@ func CapsuleHandler(w http.ResponseWriter, r *http.Request) {
 			Tags      []string `json:"tags"`
 			IsPrivate bool     `json:"is_private"`
 		}
-		json.NewDecoder(r.Body).Decode(&req)
+		if r.Body == nil {
+			utils.ErrorResponse(w, http.StatusBadRequest, errors.New("empty request body"))
+			return
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			utils.ErrorResponse(w, http.StatusBadRequest, err)
+			return
+		}
 
-		capsule, err := CapsuleStore.AddCapsule(userID, req.Title, req.Content, req.Topic, req.Tags, req.IsPrivate)
+		title := strings.TrimSpace(req.Title)
+		if title == "" {
+			utils.ErrorResponse(w, http.StatusBadRequest, &utils.ValidationError{Field: "title", Message: "cannot be empty"})
+			return
+		}
+		if len(title) > maxTitleLen {
+			utils.ErrorResponse(w, http.StatusBadRequest, &utils.ValidationError{Field: "title", Message: "exceeds maximum length"})
+			return
+		}
+
+		capsule, err := CapsuleStore.AddCapsule(userID, title, req.Content, req.Topic, req.Tags, req.IsPrivate)
 		if err != nil {
 			utils.ErrorResponse(w, http.StatusBadRequest, err)
 			return

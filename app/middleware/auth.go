@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/pkg/utils"
 )
 
 type contextKey string

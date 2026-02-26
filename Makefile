@@ -1,5 +1,5 @@
 # Docker settings
-PACKAGE_NAME := knowledge-capsule-api
+PACKAGE_NAME := knowledge-capsule
 DOCKER_USERNAME := shahadathhs
 PACKAGE_VERSION := latest
 DOCKERFILE := Dockerfile
@@ -21,7 +21,7 @@ BIN_DIR := $(GOBIN)
 # Convenience
 .PHONY: all help install hooks run build-local build build-dev push push-dev \
 	clean fmt vet tidy up down up-dev down-dev restart restart-dev logs logs-dev \
-	containers volumes networks images g-jwt sync-env swagger
+	containers volumes networks images g-jwt swagger
 
 all: build-local
 
@@ -59,15 +59,6 @@ g-jwt:
 	@./scripts/generate-jwt-secret.sh
 
 # -------------------------
-# Environment sync
-# -------------------------
-SYNC_ENV_SCRIPT := ./scripts/sync-env.sh
-
-sync-env:
-	@echo "🌱 Syncing .env variables to environment..."
-	@echo "source $(SYNC_ENV_SCRIPT)"
-
-# -------------------------
 # Dev tools
 # -------------------------
 install:
@@ -83,14 +74,14 @@ hooks: install
 	@echo "🔧 Installing git hooks..."
 	@$(GOBIN)/lefthook install || lefthook install
 
-run: install sync-env
+run: install
 	@echo "🚀 Starting API (with live reload locally)..."
 	@$(GOBIN)/air || air
 
 # -------------------------
 # Build & test
 # -------------------------
-build-local: sync-env
+build-local:
 	@echo "🔨 Building local binary -> $(BUILD_OUT)"
 	@mkdir -p $(BUILD_DIR)
 	@$(GO) build $(GOFLAGS) -o $(BUILD_OUT) $(LDFLAGS) $(BUILD_FLAGS) ./main.go

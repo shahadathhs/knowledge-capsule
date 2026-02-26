@@ -5,22 +5,24 @@ import (
 	"errors"
 	"net/http"
 
-	"knowledge-capsule-api/app/models"
-	"knowledge-capsule-api/app/store"
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/app/models"
+	"knowledge-capsule/app/store"
+	"knowledge-capsule/pkg/utils"
 )
 
 var TopicStore = &store.TopicStore{FileStore: store.FileStore[models.Topic]{FilePath: "data/topics.json"}}
 
 // TopicHandler godoc
 // @Summary Get or create topics
-// @Description Get all topics or create a new one
+// @Description Get all topics (paginated) or create a new one
 // @Tags topics
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
+// @Param page query int false "Page number (default 1)"
+// @Param limit query int false "Items per page (default 20, max 100)"
 // @Param input body models.Topic true "Topic info (for POST)"
-// @Success 200 {array} models.Topic
+// @Success 200 {object} models.PaginatedResponse "Paginated list: data, page, limit, total"
 // @Success 201 {object} models.Topic
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/topics [get]
@@ -28,8 +30,14 @@ var TopicStore = &store.TopicStore{FileStore: store.FileStore[models.Topic]{File
 func TopicHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		topics, _ := TopicStore.GetAllTopics()
-		utils.JSONResponse(w, http.StatusOK, true, "Topics fetched", topics)
+		topics, err := TopicStore.GetAllTopics()
+		if err != nil {
+			utils.ErrorResponse(w, http.StatusInternalServerError, err)
+			return
+		}
+		page, limit := utils.ParsePagination(r)
+		paged, total := utils.SlicePage(topics, page, limit)
+		utils.JSONPaginatedResponse(w, http.StatusOK, "Topics fetched", paged, page, limit, total)
 
 	case http.MethodPost:
 		var req struct {
