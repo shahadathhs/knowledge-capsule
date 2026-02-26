@@ -1,12 +1,9 @@
-# 🌐 **Knowledge Capsule API**
+# 🌐 **Knowledge Capsule**
 
 ### ⚡ A Lightweight, Go-Powered Knowledge Management Backend
 
-**Knowledge Capsule API** is a fast, simple, Go-based backend that allows you to create, store, search, and organize **“knowledge capsules”** — bite-sized learning notes categorized by topics and tags.
+**Knowledge Capsule** is a fast, simple, Go-based backend that allows you to create, store, search, and organize **“knowledge capsules”** — bite-sized learning notes categorized by topics and tags.
 Perfect for personal knowledge bases, team learning platforms, or lightweight documentation systems.
-
-📌 **Live API & Swagger Docs:**
-👉 [https://knowledge-capsule-api.onrender.com/docs/index.html](https://knowledge-capsule-api.onrender.com/docs/index.html)
 
 ## ✨ **Features**
 
@@ -32,8 +29,8 @@ Perfect for personal knowledge bases, team learning platforms, or lightweight do
 ### 1️⃣ **Clone the Repository**
 
 ```bash
-git clone https://github.com/shahadathhs/knowledge-capsule-api.git
-cd knowledge-capsule-api
+git clone https://github.com/shahadathhs/knowledge-capsule.git
+cd knowledge-capsule
 ```
 
 ### 2️⃣ **Environment Setup**
@@ -176,7 +173,7 @@ Body:
 ## 🧱 **Project Structure**
 
 ```
-knowledge-capsule-api/
+knowledge-capsule/
 ├── app/
 │   ├── handlers/       # HTTP handlers
 │   ├── middleware/     # Auth, logger, etc.

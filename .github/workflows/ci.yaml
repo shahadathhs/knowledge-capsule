@@ -1,4 +1,4 @@
-name: Lint, Format, Build, Push & Deploy
+name: Lint, Format, Build & Push
 
 on:
   push:
@@ -77,16 +77,3 @@ jobs:
           file: Dockerfile.dev
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PACKAGE_NAME }}-dev:${{ secrets.PACKAGE_VERSION }}
-
-  deploy:
-    name: Trigger Render Deployment
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Trigger Render Deploy Hook
-        run: |
-          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
-      - name: Confirm Deployment Triggered
-        run: echo "Render deployment triggered successfully."
