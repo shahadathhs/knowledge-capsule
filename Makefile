@@ -1,5 +1,5 @@
 # Docker settings
-PACKAGE_NAME := knowledge-capsule-api
+PACKAGE_NAME := knowledge-capsule
 DOCKER_USERNAME := shahadathhs
 PACKAGE_VERSION := latest
 DOCKERFILE := Dockerfile
@@ -19,9 +19,9 @@ GOBIN ?= $(CURDIR)/.bin
 BIN_DIR := $(GOBIN)
 
 # Convenience
-.PHONY: all help install hooks run build-local build build-dev push push-dev \
+.PHONY: all help install hooks run stop build-local build build-dev push push-dev \
 	clean fmt vet tidy up down up-dev down-dev restart restart-dev logs logs-dev \
-	containers volumes networks images g-jwt sync-env swagger
+	containers volumes networks images g-jwt swagger db down-db
 
 all: build-local
 
@@ -34,11 +34,14 @@ help:
 	@echo "  make build-dev              Build development Docker image ($(APP_IMAGE_DEV))"
 	@echo "  make push                   Push production image ($(APP_IMAGE))"
 	@echo "  make push-dev               Push development image ($(APP_IMAGE_DEV))"
+	@echo "  make db                     Start database compose profile"
+	@echo "  make down-db                Stop database compose profile"
 	@echo "  make up                     Start production compose profile"
 	@echo "  make down                   Stop production compose profile"
 	@echo "  make up-dev                 Start development compose profile"
 	@echo "  make down-dev               Stop development compose profile"
 	@echo "  make run                    Run local dev server with air (uses local .bin)"
+	@echo "  make stop                   Stop local dev server (air / tmp/server)"
 	@echo "  make hooks                  Install git hooks (lefthook)"
 	@echo "  make install                Install dev tools into $(GOBIN)"
 	@echo "  make fmt                    Run go fmt ./..."
@@ -59,15 +62,6 @@ g-jwt:
 	@./scripts/generate-jwt-secret.sh
 
 # -------------------------
-# Environment sync
-# -------------------------
-SYNC_ENV_SCRIPT := ./scripts/sync-env.sh
-
-sync-env:
-	@echo "🌱 Syncing .env variables to environment..."
-	@echo "source $(SYNC_ENV_SCRIPT)"
-
-# -------------------------
 # Dev tools
 # -------------------------
 install:
@@ -83,14 +77,20 @@ hooks: install
 	@echo "🔧 Installing git hooks..."
 	@$(GOBIN)/lefthook install || lefthook install
 
-run: install sync-env
+run: install
 	@echo "🚀 Starting API (with live reload locally)..."
 	@$(GOBIN)/air || air
+
+stop:
+	@echo "🛑 Stopping local dev server..."
+	@pkill -f "$(BUILD_OUT)" 2>/dev/null || true
+	@pkill -f "$(CURDIR)/.bin/air" 2>/dev/null || true
+	@echo "✅ Stopped"
 
 # -------------------------
 # Build & test
 # -------------------------
-build-local: sync-env
+build-local:
 	@echo "🔨 Building local binary -> $(BUILD_OUT)"
 	@mkdir -p $(BUILD_DIR)
 	@$(GO) build $(GOFLAGS) -o $(BUILD_OUT) $(LDFLAGS) $(BUILD_FLAGS) ./main.go
@@ -138,6 +138,14 @@ push-dev: build-dev
 # -------------------------
 # Docker compose (profiles)
 # -------------------------
+db:
+	@echo "🐳 Starting Docker Compose For Database..."
+	@docker compose -f $(COMPOSE_FILE) --profile db up -d
+
+down-db:
+	@echo "🛑 Stopping Docker Compose For Database..."
+	@docker compose -f $(COMPOSE_FILE) --profile db down
+
 up:
 	@echo "🐳 Starting Docker Compose For Production..."
 	@docker compose -f $(COMPOSE_FILE) --profile prod up -d --build

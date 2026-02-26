@@ -3,17 +3,16 @@ package middleware
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/pkg/logger"
+	"knowledge-capsule/pkg/utils"
 )
 
 func Recover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {
-				log.Printf("panic recovered: %v", rec)
 				var err error
 				switch e := rec.(type) {
 				case error:
@@ -21,7 +20,8 @@ func Recover(next http.Handler) http.Handler {
 				default:
 					err = errors.New(fmt.Sprint(e))
 				}
-				utils.ErrorResponse(w, http.StatusInternalServerError, err)
+				logger.ErrorRequest(r, logger.EventPanic, err)
+				utils.ErrorResponse(w, r, http.StatusInternalServerError, err)
 			}
 		}()
 		next.ServeHTTP(w, r)

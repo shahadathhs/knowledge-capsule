@@ -1,60 +1,79 @@
 services:
+  postgres:
+    image: postgres:17
+    container_name: ${PACKAGE_NAME:-knowledge-capsule}-postgres
+    profiles:
+      - prod
+      - dev
+      - db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-knowledge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-knowledge}
+      POSTGRES_DB: ${POSTGRES_DB:-knowledge}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-knowledge} -d ${POSTGRES_DB:-knowledge}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   # Production server
   api:
     container_name: ${PACKAGE_NAME}-prod
     image: ${DOCKER_USERNAME}/${PACKAGE_NAME}:${PACKAGE_VERSION}
-
     profiles:
       - prod
-    
     build:
       context: .
       dockerfile: Dockerfile
-
     ports:
       - "8080:${PORT:-8080}"
-
     env_file:
       - .env
-
     environment:
       GO_ENV: production
-    
+      DATABASE_URL: postgres://${POSTGRES_USER:-knowledge}:${POSTGRES_PASSWORD:-knowledge}@postgres:5432/${POSTGRES_DB:-knowledge}?sslmode=disable
     command: ["./server"]
-    
     restart: always
-    
     volumes:
-      - prod_data:/app/data
+      - prod_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${PORT:-8080}/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Development server with live reload
   api-dev:
     container_name: ${PACKAGE_NAME}-dev
     image: ${DOCKER_USERNAME}/${PACKAGE_NAME}-dev:${PACKAGE_VERSION}
-    
     profiles:
       - dev
-
     build:
       context: .
       dockerfile: Dockerfile.dev   # separate Dockerfile for Air
-
     ports:
       - "8081:${PORT:-8080}"  # map dev to a different port
-
     env_file:
       - .env
-    
     environment:
       GO_ENV: development
-
+      DATABASE_URL: postgres://${POSTGRES_USER:-knowledge}:${POSTGRES_PASSWORD:-knowledge}@postgres:5432/${POSTGRES_DB:-knowledge}?sslmode=disable
     command: ["air", "-c", ".air.toml"]
-
     restart: unless-stopped
-
     volumes:
       - .:/app
-      - ./data:/app/data
+      - ./uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
-  prod_data:
+  postgres_data:
+  prod_uploads:

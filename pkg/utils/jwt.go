@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"knowledge-capsule-api/app/models"
+	"knowledge-capsule/app/models"
 )
 
 var secretKey []byte
@@ -19,17 +19,24 @@ func InitJWTSecret(secret string) {
 }
 
 // GenerateJWT creates a simple JWT token manually.
-func GenerateJWT(userID, email string, expiry time.Duration) (string, error) {
+func GenerateJWT(userID, email, role string, expiry time.Duration) (string, error) {
 	header := base64.URLEncoding.EncodeToString([]byte(`{"alg":"HS256","typ":"JWT"}`))
+	if role == "" {
+		role = models.RoleUser
+	}
 
 	claims := models.TokenClaims{
 		UserID: userID,
 		Email:  email,
+		Role:   role,
 		Iat:    time.Now().Unix(),
 		Exp:    time.Now().Add(expiry).Unix(),
 	}
 
-	payloadBytes, _ := json.Marshal(claims)
+	payloadBytes, err := json.Marshal(claims)
+	if err != nil {
+		return "", err
+	}
 	payload := base64.URLEncoding.EncodeToString(payloadBytes)
 
 	unsignedToken := header + "." + payload

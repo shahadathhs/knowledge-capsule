@@ -12,13 +12,18 @@ Perfect for personal knowledge bases, team learning platforms, or lightweight do
 * 🗂️ **Topic Organization** – Categorize capsules using topics
 * 🔍 **Powerful Search** – Search capsules by title or content
 * 🏷️ **Tagging System** – Add tags for deeper filtering
-* 💾 **File-based Storage** – JSON storage, no DB required — ultra simple setup
-* 💬 **Real-time Chat** – WebSocket-based chat with history
+* 💾 **PostgreSQL + GORM** – Persistent database storage
+* 👤 **RBAC** – Roles: user, admin, superadmin (role assignment by admin/superadmin)
+* 👥 **User Management** – Profile, avatar, list users (admin), admin team (superadmin)
+* 🔍 **Global Search** – Admin-only search across users, topics, capsules
+* 📋 **Filtering** – Query params on GET endpoints (topic, tags, q, is_private, role)
+* 💬 **Real-time Chat** – Fully WebSocket-based (send messages, fetch history over socket)
 * 📂 **File Uploads** – Upload and serve files locally
 
 ## 🧰 **Tech Stack**
 
 * 🏎️ **Go (1.25+)**
+* 🐘 **PostgreSQL** – Database
 * 📦 **Docker & Docker Compose**
 * 🔁 **Air (Live Reload)**
 * 🛠️ **Makefile** for workflow automation
@@ -35,18 +40,32 @@ cd knowledge-capsule
 
 ### 2️⃣ **Environment Setup**
 
-Create `.env` file:
+Copy `.env.example` to `.env` and fill in values:
 
 ```bash
-PORT=8080
-GO_ENV=development
-JWT_SECRET=your_super_secret_key_here
+cp .env.example .env
 ```
 
-💡 Generate secret automatically:
-`make g-jwt`
+Required variables:
+
+| Variable | Description |
+|----------|-------------|
+| `PORT` | Server port (default: 8080) |
+| `GO_ENV` | `development` or `production` |
+| `JWT_SECRET` | Secret for JWT signing |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `POSTGRES_USER` | DB user (for Docker Compose) |
+| `POSTGRES_PASSWORD` | DB password |
+| `POSTGRES_DB` | Database name |
+| `SUPERADMIN_EMAIL` | (Optional) Superadmin email – creates/updates on startup |
+| `SUPERADMIN_PASSWORD` | (Optional) Superadmin password |
+| `SUPERADMIN_NAME` | (Optional) Superadmin display name |
+
+💡 Generate JWT secret: `make g-jwt`
 
 ## 🐳 Run Using Docker (Recommended)
+
+Docker Compose starts **PostgreSQL** + **API** together. The database is included in both `dev` and `prod` profiles.
 
 ### ▶️ Development Mode (with Live Reload)
 
@@ -54,7 +73,7 @@ JWT_SECRET=your_super_secret_key_here
 make up-dev
 ```
 
-👉 Runs at: **[http://localhost:8081](http://localhost:8081)**
+👉 API at **[http://localhost:8081](http://localhost:8081)** · PostgreSQL on `localhost:5432`
 
 ### ▶️ Production Mode
 
@@ -62,7 +81,16 @@ make up-dev
 make up
 ```
 
-👉 Runs at: **[http://localhost:8080](http://localhost:8080)**
+👉 API at **[http://localhost:8080](http://localhost:8080)** · PostgreSQL on `localhost:5432`
+
+### 🐘 Database Only (for local dev without full compose)
+
+If you run the API locally (`make run`) and want PostgreSQL in Docker:
+
+```bash
+make db        # Start PostgreSQL
+make down-db   # Stop PostgreSQL
+```
 
 ### ⏹️ Stop Containers
 
@@ -72,6 +100,8 @@ make down       # prod
 ```
 
 ## 🖥️ Run Locally (Without Docker)
+
+Ensure PostgreSQL is running (e.g. `make db` or your own instance) and `DATABASE_URL` is set in `.env`.
 
 Install dependencies:
 
@@ -94,12 +124,13 @@ make build-local
 
 ## 🧪 **Test Chat UI**
 
-Open `web/test_chat.html` in your browser to test the WebSocket chat functionality.
+**GET** `/test-ws` — WebSocket chat test page (same origin as API, no CORS issues)
 
 ## 📘 **API Documentation**
 
-Swagger docs available at:
-`/docs/index.html`
+Swagger UI at `/docs/index.html`
+
+**Protected endpoints:** Click **Authorize**, enter `Bearer <your-jwt-token>` (get token from POST `/api/auth/login`), then **Authorize** again. All subsequent requests will include the token.
 
 ## 🔐 **Authentication Endpoints**
 
@@ -120,10 +151,17 @@ Body:
 
 **POST** `/api/auth/login`
 
+## 👤 **User & Profile** (Requires JWT)
+
+* 📥 **GET** `/api/users/me` – Current user profile (id, name, email, role, avatar_url)
+* ✏️ **PATCH** `/api/users/me` – Update name, avatar_url
+
 ## 🗂️ **Topic Management** (Requires JWT)
 
-* 📥 **GET** `/api/topics` – Fetch topics
+* 📥 **GET** `/api/topics?page=1&limit=20&q=<search>` – Fetch topics (paginated, filterable)
 * ➕ **POST** `/api/topics` – Create topic
+* ✏️ **PUT** `/api/topics/{id}` – Update topic
+* 🗑️ **DELETE** `/api/topics/{id}` – Delete topic
 
 ## 🧠 **Capsule Management** (Requires JWT)
 
@@ -143,11 +181,31 @@ Body:
 
 ### 📥 Get Capsules
 
-**GET** `/api/capsules`
+**GET** `/api/capsules?page=1&limit=20&topic=&tags=&q=&is_private=` (all query params optional)
 
-## 🔍 **Search Capsules**
+### ✏️ Update Capsule
 
-**GET** `/api/search?q=<query>`
+**PUT** `/api/capsules/{id}`
+
+### 🗑️ Delete Capsule
+
+**DELETE** `/api/capsules/{id}`
+
+## 🔍 **Search & Filter**
+
+**GET endpoints support search + filter** via query params (`q`, `page`, `limit`, etc.):
+- `GET /api/capsules?q=&topic=&tags=&is_private=` – Search/filter capsules (owner only)
+- `GET /api/topics?q=` – Search/filter topics
+- `GET /api/users?q=&role=` – Search/filter users (admin only)
+
+**GET** `/api/admin/search?q=<query>&limit=10` – **Global search** (admin only): searches users, topics, and capsules in one request
+
+## 👥 **Admin** (Admin/Superadmin)
+
+* 📥 **GET** `/api/users` – List users (admin, paginated: `q`, `role`, `page`, `limit`)
+* 📥 **GET** `/api/users/{id}` – Get user by ID (admin)
+* 📥 **GET** `/api/admin/admins` – List admins (superadmin only)
+* ✏️ **POST** `/api/admin/users/{id}/role` – Set user role (superadmin only): `{"role":"user|admin|superadmin"}`
 
 ## ❤️‍🩹 **Health Check**
 
@@ -156,12 +214,11 @@ Body:
 
 ## 💬 **Chat & Uploads** (Requires JWT)
 
-### 🔌 WebSocket Chat
-**GET** `/ws/chat`
-* Connect via WebSocket to chat in real-time.
-
-### 📜 Chat History
-**GET** `/api/chat/history`
+### 🔌 WebSocket Chat (Fully socket-based)
+**GET** `/ws/chat` — Connect with `?token=<jwt>`
+* **Send message:** `{ "type": "send", "payload": { "receiver_id": "...", "content": "...", "type": "text" } }`
+* **Get history:** `{ "type": "get_history", "payload": { "user_id": "...", "page": 1, "limit": 20 } }`
+* **Server responses:** `{ "type": "message"|"history"|"error", "payload": {...} }`
 
 ### 📤 Upload File
 **POST** `/api/upload`
@@ -178,12 +235,14 @@ knowledge-capsule/
 │   ├── handlers/       # HTTP handlers
 │   ├── middleware/     # Auth, logger, etc.
 │   ├── models/         # Data models
-│   └── store/          # JSON-based storage
+│   └── store/          # GORM stores
 ├── pkg/
 │   ├── config/         # Configuration loading
+│   ├── db/             # PostgreSQL connection
 │   └── utils/          # Helpers
 ├── web/                # Frontend assets (Chat UI)
-├── data/               # JSON data store
+├── docs/               # Swagger API docs
+├── uploads/            # Uploaded files
 ├── scripts/            # Helper scripts
 ├── Dockerfile
 ├── Dockerfile.dev
@@ -195,10 +254,11 @@ knowledge-capsule/
 ## 🛠️ **Development Commands**
 
 * 📘 `make help` – See all commands
-* ▶️ `make run` – Run locally
+* ▶️ `make run` – Run locally with live reload
 * 🔨 `make build-local` – Build binary
+* 🐘 `make db` – Start PostgreSQL (for local dev)
 * ✨ `make fmt` – Format code
 * 🔍 `make vet` – Static analysis
 * 🧹 `make tidy` – Cleanup modules
-* 🧪 `make test` – Run tests
+* 📝 `make swagger` – Generate API docs
 * 🔐 `make g-jwt` – Generate JWT secret

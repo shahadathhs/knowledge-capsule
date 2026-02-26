@@ -1,37 +1,123 @@
 basePath: /
 definitions:
+  handlers.GlobalSearchResult:
+    properties:
+      capsules:
+        items:
+          $ref: '#/definitions/models.Capsule'
+        type: array
+      topics:
+        items:
+          $ref: '#/definitions/models.Topic'
+        type: array
+      users:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+    type: object
   models.Capsule:
     properties:
       content:
+        example: Interfaces are named collections of method signatures...
         type: string
       created_at:
         type: string
       id:
         type: string
       is_private:
+        example: false
         type: boolean
       tags:
+        example:
+        - programming
+        - go
         items:
           type: string
         type: array
       title:
+        example: Interfaces in Go
         type: string
       topic:
+        example: Golang
         type: string
       updated_at:
         type: string
       user_id:
         type: string
     type: object
+  models.CapsuleInput:
+    properties:
+      content:
+        example: Interfaces are named collections of method signatures...
+        type: string
+      is_private:
+        example: false
+        type: boolean
+      tags:
+        example:
+        - programming
+        - go
+        items:
+          type: string
+        type: array
+      title:
+        example: Interfaces in Go
+        type: string
+      topic:
+        example: Golang
+        type: string
+    type: object
+  models.PaginatedResponse:
+    properties:
+      data: {}
+      limit:
+        type: integer
+      message:
+        type: string
+      page:
+        type: integer
+      success:
+        type: boolean
+      total:
+        type: integer
+    type: object
   models.Topic:
     properties:
       created_at:
         type: string
       description:
+        example: Go programming language
         type: string
       id:
         type: string
       name:
+        example: Golang
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.TopicInput:
+    properties:
+      description:
+        example: Go programming language
+        type: string
+      name:
+        example: Golang
+        type: string
+    type: object
+  models.User:
+    properties:
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
         type: string
       updated_at:
         type: string
@@ -41,14 +127,122 @@ info:
     email: support@swagger.io
     name: API Support
     url: http://www.swagger.io/support
-  description: This is a sample server for Knowledge Capsule API.
+  description: Knowledge Capsule - knowledge management backend.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Knowledge Capsule API
+  title: Knowledge Capsule
   version: "1.0"
 paths:
+  /api/admin/admins:
+    get:
+      consumes:
+      - application/json
+      description: List users with role admin or superadmin
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginatedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List admins (superadmin only)
+      tags:
+      - admin
+  /api/admin/search:
+    get:
+      consumes:
+      - application/json
+      description: Search across users, topics, and capsules
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Max results per type (default 10)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.GlobalSearchResult'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Global search (admin only)
+      tags:
+      - admin
+  /api/admin/users/{id}/role:
+    post:
+      consumes:
+      - application/json
+      description: 'Set role for a user: user, admin, or superadmin'
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 'role: user|admin|superadmin'
+        in: body
+        name: input
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Set user role (superadmin only)
+      tags:
+      - admin
   /api/auth/login:
     post:
       consumes:
@@ -121,27 +315,39 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get all capsules for the user or create a new one
+      description: Get all capsules for the user (paginated, filterable)
       parameters:
-      - description: Capsule info (for POST)
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.Capsule'
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by topic
+        in: query
+        name: topic
+        type: string
+      - description: Filter by tags (comma-separated)
+        in: query
+        name: tags
+        type: string
+      - description: Search in title, content, tags
+        in: query
+        name: q
+        type: string
+      - description: Filter by is_private
+        in: query
+        name: is_private
+        type: boolean
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: 'Paginated list: data, page, limit, total'
           schema:
-            items:
-              $ref: '#/definitions/models.Capsule'
-            type: array
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.Capsule'
+            $ref: '#/definitions/models.PaginatedResponse'
         "400":
           description: Bad Request
           schema:
@@ -149,29 +355,23 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get or create capsules
+      summary: Get capsules
       tags:
       - capsules
     post:
       consumes:
       - application/json
-      description: Get all capsules for the user or create a new one
+      description: Create a new capsule
       parameters:
-      - description: Capsule info (for POST)
+      - description: Capsule data
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/models.Capsule'
+          $ref: '#/definitions/models.CapsuleInput'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.Capsule'
-            type: array
         "201":
           description: Created
           schema:
@@ -183,18 +383,18 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get or create capsules
+      summary: Create capsule
       tags:
       - capsules
-  /api/search:
-    get:
+  /api/capsules/{id}:
+    delete:
       consumes:
       - application/json
-      description: Search capsules by query string
+      description: Delete a capsule (user must own it)
       parameters:
-      - description: Search query
-        in: query
-        name: q
+      - description: Capsule ID
+        in: path
+        name: id
         required: true
         type: string
       produces:
@@ -203,44 +403,108 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Capsule'
-            type: array
-        "400":
-          description: Bad Request
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
           schema:
             additionalProperties: true
             type: object
       security:
       - BearerAuth: []
-      summary: Search capsules
+      summary: Delete capsule by ID
       tags:
-      - search
-  /api/topics:
+      - capsules
     get:
       consumes:
       - application/json
-      description: Get all topics or create a new one
+      description: Get a single capsule (user must own it)
       parameters:
-      - description: Topic info (for POST)
-        in: body
-        name: input
+      - description: Capsule ID
+        in: path
+        name: id
         required: true
-        schema:
-          $ref: '#/definitions/models.Topic'
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Topic'
-            type: array
-        "201":
-          description: Created
+            $ref: '#/definitions/models.Capsule'
+        "404":
+          description: Not Found
           schema:
-            $ref: '#/definitions/models.Topic'
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get capsule by ID
+      tags:
+      - capsules
+    put:
+      consumes:
+      - application/json
+      description: Update a capsule (user must own it)
+      parameters:
+      - description: Capsule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated capsule fields
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.CapsuleInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Capsule'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update capsule by ID
+      tags:
+      - capsules
+  /api/topics:
+    get:
+      consumes:
+      - application/json
+      description: Get all topics (paginated, filterable)
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Search in name or description
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Paginated list: data, page, limit, total'
+          schema:
+            $ref: '#/definitions/models.PaginatedResponse'
         "400":
           description: Bad Request
           schema:
@@ -248,29 +512,23 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get or create topics
+      summary: Get topics
       tags:
       - topics
     post:
       consumes:
       - application/json
-      description: Get all topics or create a new one
+      description: Create a new topic
       parameters:
-      - description: Topic info (for POST)
+      - description: Topic data
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/models.Topic'
+          $ref: '#/definitions/models.TopicInput'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.Topic'
-            type: array
         "201":
           description: Created
           schema:
@@ -282,9 +540,225 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get or create topics
+      summary: Create topic
       tags:
       - topics
+  /api/topics/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a topic
+      parameters:
+      - description: Topic ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete topic by ID
+      tags:
+      - topics
+    get:
+      consumes:
+      - application/json
+      description: Get a single topic
+      parameters:
+      - description: Topic ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Topic'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get topic by ID
+      tags:
+      - topics
+    put:
+      consumes:
+      - application/json
+      description: Update a topic
+      parameters:
+      - description: Topic ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated topic fields
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.TopicInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Topic'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update topic by ID
+      tags:
+      - topics
+  /api/users:
+    get:
+      consumes:
+      - application/json
+      description: Paginated list with optional search and role filter
+      parameters:
+      - description: Search by name or email
+        in: query
+        name: q
+        type: string
+      - description: Filter by role (user, admin, superadmin)
+        in: query
+        name: role
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginatedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List users (admin only)
+      tags:
+      - users
+  /api/users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get any user's profile by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user by ID (admin only)
+      tags:
+      - users
+  /api/users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get the authenticated user's profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Update name and/or avatar_url
+      parameters:
+      - description: name, avatar_url (optional)
+        in: body
+        name: input
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update current user profile
+      tags:
+      - users
   /health:
     get:
       description: Check if the service is running
@@ -300,4 +774,11 @@ paths:
       summary: Health check
       tags:
       - health
+securityDefinitions:
+  BearerAuth:
+    description: Enter your JWT token (or "Bearer &lt;token&gt;" for clarity). Get
+      token from POST /api/auth/login.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

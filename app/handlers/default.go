@@ -3,8 +3,16 @@ package handlers
 import (
 	"net/http"
 
-	"knowledge-capsule-api/pkg/utils"
+	"knowledge-capsule/pkg/utils"
 )
+
+// TestChatHandler serves the WebSocket chat test page at /test-ws.
+func TestChatHandler(w http.ResponseWriter, r *http.Request) {
+	if !utils.AllowMethod(w, r, http.MethodGet) {
+		return
+	}
+	http.ServeFile(w, r, "web/test_chat.html")
+}
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 	if !utils.AllowMethod(w, r, http.MethodGet) {
@@ -39,6 +47,6 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.JSONResponse(w, http.StatusOK, true, "Service is healthy", map[string]string{
-		"service": "knowledge-capsule-api",
+		"service": "knowledge-capsule",
 	})
 }
