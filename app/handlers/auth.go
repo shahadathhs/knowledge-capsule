@@ -5,12 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"knowledge-capsule/app/models"
-	"knowledge-capsule/app/store"
 	"knowledge-capsule/pkg/utils"
 )
-
-var UserStore = &store.UserStore{FileStore: store.FileStore[models.User]{FilePath: "data/users.json"}}
 
 // RegisterHandler godoc
 // @Summary Register a new user

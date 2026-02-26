@@ -2,28 +2,28 @@ package store
 
 import (
 	"errors"
-	"time"
 
 	"knowledge-capsule/app/models"
 	"knowledge-capsule/pkg/utils"
+
+	"gorm.io/gorm"
 )
 
-type UserStore struct {
-	FileStore[models.User]
+// userStore implements user storage with GORM.
+type userStore struct {
+	DB *gorm.DB
+}
+
+// NewUserStore returns a UserStore backed by GORM.
+func NewUserStore(db *gorm.DB) UserStore {
+	return &userStore{DB: db}
 }
 
 // AddUser adds a new user if email is not taken.
-func (s *UserStore) AddUser(name, email, password string) (*models.User, error) {
-	users, err := s.Load()
-	if err != nil {
-		return nil, err
-	}
-
-	// Check duplicate email
-	for _, u := range users {
-		if u.Email == email {
-			return nil, errors.New("email already exists")
-		}
+func (s *userStore) AddUser(name, email, password string) (*models.User, error) {
+	var existing models.User
+	if err := s.DB.Where("email = ?", email).First(&existing).Error; err == nil {
+		return nil, errors.New("email already exists")
 	}
 
 	passwordHash, err := utils.HashPassword(password)
@@ -31,49 +31,41 @@ func (s *UserStore) AddUser(name, email, password string) (*models.User, error) 
 		return nil, err
 	}
 
-	newUser := models.User{
+	user := models.User{
 		ID:           utils.GenerateUUID(),
 		Name:         name,
 		Email:        email,
 		PasswordHash: passwordHash,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
 	}
 
-	users = append(users, newUser)
-	if err := s.Save(users); err != nil {
+	if err := s.DB.Create(&user).Error; err != nil {
 		return nil, err
 	}
-	return &newUser, nil
+	return &user, nil
 }
 
 // FindByEmail finds a user by email.
-func (s *UserStore) FindByEmail(email string) (*models.User, error) {
-	users, err := s.Load()
+func (s *userStore) FindByEmail(email string) (*models.User, error) {
+	var user models.User
+	err := s.DB.Where("email = ?", email).First(&user).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
 		return nil, err
 	}
-
-	for _, u := range users {
-		if u.Email == email {
-			return &u, nil
-		}
-	}
-
-	return nil, errors.New("user not found")
+	return &user, nil
 }
 
 // FindByID finds a user by ID.
-func (s *UserStore) FindByID(id string) (*models.User, error) {
-	users, err := s.Load()
+func (s *userStore) FindByID(id string) (*models.User, error) {
+	var user models.User
+	err := s.DB.First(&user, "id = ?", id).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
 		return nil, err
 	}
-
-	for _, u := range users {
-		if u.ID == id {
-			return &u, nil
-		}
-	}
-	return nil, errors.New("user not found")
+	return &user, nil
 }

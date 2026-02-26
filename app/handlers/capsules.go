@@ -7,14 +7,10 @@ import (
 	"strings"
 
 	"knowledge-capsule/app/middleware"
-	"knowledge-capsule/app/models"
-	"knowledge-capsule/app/store"
 	"knowledge-capsule/pkg/utils"
 )
 
 const maxTitleLen = 500
-
-var CapsuleStore = &store.CapsuleStore{FileStore: store.FileStore[models.Capsule]{FilePath: "data/capsules.json"}}
 
 // CapsuleHandler godoc
 // @Summary Get or create capsules

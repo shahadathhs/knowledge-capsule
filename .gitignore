@@ -47,6 +47,10 @@ bin/
 # GitHub Actions cache folders (optional)
 .github/workflows/*.cache/
 
+# Uploaded files (keep folder via .gitkeep)
+uploads/*
+!uploads/.gitkeep
+
 # other
 tmp/
 temp/

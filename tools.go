@@ -7,6 +7,10 @@ import (
 	_ "github.com/air-verse/air"
 	_ "github.com/evilmartians/lefthook"
 	_ "github.com/gorilla/websocket"
+	_ "github.com/joho/godotenv"
 	_ "github.com/swaggo/http-swagger"
 	_ "github.com/swaggo/swag"
+	_ "gorm.io/datatypes"
+	_ "gorm.io/driver/postgres"
+	_ "gorm.io/gorm"
 )

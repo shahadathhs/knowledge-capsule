@@ -10,6 +10,7 @@ import (
 	"knowledge-capsule/app/middleware"
 	_ "knowledge-capsule/docs"
 	"knowledge-capsule/pkg/config"
+	"knowledge-capsule/pkg/db"
 	"knowledge-capsule/pkg/utils"
 
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -45,6 +46,15 @@ func main() {
 	}
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})))
 
+	database, err := db.Open(cfg.DatabaseURL)
+	if err != nil {
+		slog.Error("Failed to connect to database", "error", err)
+		os.Exit(1)
+	}
+
+	handlers.InitStores(database)
+	handlers.InitChat(cfg.CORSOrigins)
+
 	mux := http.NewServeMux()
 
 	// Default routes
@@ -69,20 +79,13 @@ func main() {
 
 	// Chat & File Upload
 	mux.Handle("/ws/chat", middleware.AuthMiddleware(http.HandlerFunc(handlers.ChatWebSocketHandler)))
-	mux.Handle("/api/chat/history", middleware.AuthMiddleware(http.HandlerFunc(handlers.GetChatHistoryHandler)))
 	mux.Handle("/api/upload", middleware.AuthMiddleware(http.HandlerFunc(handlers.UploadHandler)))
-	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("data/uploads"))))
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 
 	// Wrap with CORS, logger, recover
 	handler := middleware.CORS(cfg.CORSOrigins)(middleware.Recover(middleware.Logger(mux)))
 
 	utils.InitJWTSecret(cfg.JWTSecret)
-
-	// Initialize Chat
-	if err := handlers.InitChat(cfg.CORSOrigins); err != nil {
-		slog.Error("Failed to initialize chat store", "error", err)
-		os.Exit(1)
-	}
 
 	server := &http.Server{
 		Addr:         ":" + cfg.Port,

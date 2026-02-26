@@ -57,6 +57,7 @@
       <h3>2. Chat</h3>
       <p>Logged in as: <span id="user-id"></span></p>
       <input type="text" id="receiver-id" placeholder="Receiver ID" />
+      <button onclick="loadHistory()">Load History</button>
       <div id="chat-box"></div>
       <input type="text" id="message-input" placeholder="Type a message..." />
       <button onclick="sendMessage()">Send</button>
@@ -125,21 +126,40 @@
 
         ws.onopen = () => console.log("Connected");
         ws.onmessage = (event) => {
-          const msg = JSON.parse(event.data);
-          displayMessage(msg, "other-message");
+          const data = JSON.parse(event.data);
+          if (data.type === "message") {
+            displayMessage(data.payload, "other-message");
+          } else if (data.type === "history") {
+            const p = data.payload;
+            document.getElementById("chat-box").innerHTML = "";
+            (p.data || []).forEach((m) => {
+              const isMe = m.sender_id === myUserId;
+              displayMessage(m, isMe ? "my-message" : "other-message");
+            });
+          } else if (data.type === "error") {
+            console.error("Chat error:", data.payload);
+          }
         };
+      }
+
+      function loadHistory() {
+        const receiverId = document.getElementById("receiver-id").value;
+        if (!receiverId) {
+          alert("Enter Receiver ID first");
+          return;
+        }
+        ws.send(JSON.stringify({ type: "get_history", payload: { user_id: receiverId, page: 1, limit: 50 } }));
       }
 
       function sendMessage() {
         const content = document.getElementById("message-input").value;
         const receiverId = document.getElementById("receiver-id").value;
-        const msg = {
-          receiver_id: receiverId,
-          content: content,
-          type: "text",
-        };
-        ws.send(JSON.stringify(msg));
-        displayMessage({ content }, "my-message");
+        if (!receiverId) {
+          alert("Enter Receiver ID first");
+          return;
+        }
+        ws.send(JSON.stringify({ type: "send", payload: { receiver_id: receiverId, content, type: "text" } }));
+        displayMessage({ content, sender_id: myUserId }, "my-message");
         document.getElementById("message-input").value = "";
       }
 
@@ -160,21 +180,23 @@
 
         if (data.success) {
           const receiverId = document.getElementById("receiver-id").value;
-          const msg = {
-            receiver_id: receiverId,
-            content: `Sent a file: ${data.data.file_url}`,
-            type: "file",
-            file_url: data.data.file_url,
-          };
-          ws.send(JSON.stringify(msg));
-          displayMessage(msg, "my-message");
+          ws.send(JSON.stringify({
+            type: "send",
+            payload: {
+              receiver_id: receiverId,
+              content: `Sent a file: ${data.data.file_url}`,
+              type: "file",
+              file_url: data.data.file_url,
+            },
+          }));
+          displayMessage({ content: `Sent a file: ${data.data.file_url}`, file_url: data.data.file_url }, "my-message");
         }
       }
 
       function displayMessage(msg, className) {
         const div = document.createElement("div");
         div.className = `message ${className}`;
-        div.innerText = msg.content;
+        div.innerText = msg.content || "";
         if (msg.file_url) {
           const link = document.createElement("a");
           link.href = msg.file_url;
@@ -183,6 +205,7 @@
           div.appendChild(link);
         }
         document.getElementById("chat-box").appendChild(div);
+        document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
       }
     </script>
   </body>

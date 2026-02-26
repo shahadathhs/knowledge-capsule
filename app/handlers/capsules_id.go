@@ -77,7 +77,7 @@ func CapsuleByIDHandler(w http.ResponseWriter, r *http.Request) {
 			Title:     title,
 			Content:   req.Content,
 			Topic:     req.Topic,
-			Tags:      req.Tags,
+			Tags:      models.Tags(req.Tags),
 			IsPrivate: req.IsPrivate,
 		}
 		capsule, err := CapsuleStore.UpdateCapsule(id, userID, updated)

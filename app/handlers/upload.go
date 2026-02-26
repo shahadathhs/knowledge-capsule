@@ -28,7 +28,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// Create uploads directory if not exists
-	uploadDir := "data/uploads"
+	uploadDir := "uploads"
 	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err)
 		return

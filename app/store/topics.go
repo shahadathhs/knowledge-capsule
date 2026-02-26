@@ -2,101 +2,88 @@ package store
 
 import (
 	"errors"
-	"time"
 
 	"knowledge-capsule/app/models"
 	"knowledge-capsule/pkg/utils"
+
+	"gorm.io/gorm"
 )
 
-type TopicStore struct {
-	FileStore[models.Topic]
+// topicStore implements topic storage with GORM.
+type topicStore struct {
+	DB *gorm.DB
+}
+
+// NewTopicStore returns a TopicStore backed by GORM.
+func NewTopicStore(db *gorm.DB) TopicStore {
+	return &topicStore{DB: db}
 }
 
 // AddTopic creates a new topic.
-func (s *TopicStore) AddTopic(name, description string) (*models.Topic, error) {
-	topics, err := s.Load()
-	if err != nil {
-		return nil, err
+func (s *topicStore) AddTopic(name, description string) (*models.Topic, error) {
+	var existing models.Topic
+	if err := s.DB.Where("name = ?", name).First(&existing).Error; err == nil {
+		return nil, errors.New("topic already exists")
 	}
 
-	// Check duplicate name
-	for _, t := range topics {
-		if t.Name == name {
-			return nil, errors.New("topic already exists")
-		}
-	}
-
-	newTopic := models.Topic{
+	topic := models.Topic{
 		ID:          utils.GenerateUUID(),
 		Name:        name,
 		Description: description,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
 	}
-
-	topics = append(topics, newTopic)
-	if err := s.Save(topics); err != nil {
+	if err := s.DB.Create(&topic).Error; err != nil {
 		return nil, err
 	}
-	return &newTopic, nil
+	return &topic, nil
 }
 
 // GetAllTopics returns all topics.
-func (s *TopicStore) GetAllTopics() ([]models.Topic, error) {
-	return s.Load()
+func (s *topicStore) GetAllTopics() ([]models.Topic, error) {
+	var topics []models.Topic
+	if err := s.DB.Find(&topics).Error; err != nil {
+		return nil, err
+	}
+	return topics, nil
 }
 
 // FindByID returns a topic by its ID.
-func (s *TopicStore) FindByID(id string) (*models.Topic, error) {
-	topics, err := s.Load()
+func (s *topicStore) FindByID(id string) (*models.Topic, error) {
+	var topic models.Topic
+	err := s.DB.First(&topic, "id = ?", id).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("topic not found")
+		}
 		return nil, err
 	}
-	for _, t := range topics {
-		if t.ID == id {
-			return &t, nil
-		}
-	}
-	return nil, errors.New("topic not found")
+	return &topic, nil
 }
 
 // UpdateTopic updates a topic by ID.
-func (s *TopicStore) UpdateTopic(id, name, description string) (*models.Topic, error) {
-	topics, err := s.Load()
-	if err != nil {
-		return nil, err
+func (s *topicStore) UpdateTopic(id, name, description string) (*models.Topic, error) {
+	result := s.DB.Model(&models.Topic{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"name":        name,
+		"description": description,
+	})
+	if result.Error != nil {
+		return nil, result.Error
 	}
-	for i, t := range topics {
-		if t.ID == id {
-			topics[i].Name = name
-			topics[i].Description = description
-			topics[i].UpdatedAt = time.Now()
-			if err := s.Save(topics); err != nil {
-				return nil, err
-			}
-			return &topics[i], nil
-		}
+	if result.RowsAffected == 0 {
+		return nil, errors.New("topic not found")
 	}
-	return nil, errors.New("topic not found")
+	var topic models.Topic
+	s.DB.First(&topic, "id = ?", id)
+	return &topic, nil
 }
 
 // DeleteTopic removes a topic by ID.
-func (s *TopicStore) DeleteTopic(id string) error {
-	topics, err := s.Load()
-	if err != nil {
-		return err
+func (s *topicStore) DeleteTopic(id string) error {
+	result := s.DB.Where("id = ?", id).Delete(&models.Topic{})
+	if result.Error != nil {
+		return result.Error
 	}
-	newList := make([]models.Topic, 0, len(topics))
-	found := false
-	for _, t := range topics {
-		if t.ID == id {
-			found = true
-			continue
-		}
-		newList = append(newList, t)
-	}
-	if !found {
+	if result.RowsAffected == 0 {
 		return errors.New("topic not found")
 	}
-	return s.Save(newList)
+	return nil
 }

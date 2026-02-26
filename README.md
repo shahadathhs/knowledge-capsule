@@ -12,13 +12,14 @@ Perfect for personal knowledge bases, team learning platforms, or lightweight do
 * 🗂️ **Topic Organization** – Categorize capsules using topics
 * 🔍 **Powerful Search** – Search capsules by title or content
 * 🏷️ **Tagging System** – Add tags for deeper filtering
-* 💾 **File-based Storage** – JSON storage, no DB required — ultra simple setup
-* 💬 **Real-time Chat** – WebSocket-based chat with history
+* 💾 **PostgreSQL + GORM** – Persistent database storage
+* 💬 **Real-time Chat** – Fully WebSocket-based (send messages, fetch history over socket)
 * 📂 **File Uploads** – Upload and serve files locally
 
 ## 🧰 **Tech Stack**
 
 * 🏎️ **Go (1.25+)**
+* 🐘 **PostgreSQL** – Database
 * 📦 **Docker & Docker Compose**
 * 🔁 **Air (Live Reload)**
 * 🛠️ **Makefile** for workflow automation
@@ -41,6 +42,7 @@ Create `.env` file:
 PORT=8080
 GO_ENV=development
 JWT_SECRET=your_super_secret_key_here
+DATABASE_URL=postgres://user:pass@localhost:5432/knowledge?sslmode=disable
 ```
 
 💡 Generate secret automatically:
@@ -156,12 +158,11 @@ Body:
 
 ## 💬 **Chat & Uploads** (Requires JWT)
 
-### 🔌 WebSocket Chat
-**GET** `/ws/chat`
-* Connect via WebSocket to chat in real-time.
-
-### 📜 Chat History
-**GET** `/api/chat/history`
+### 🔌 WebSocket Chat (Fully socket-based)
+**GET** `/ws/chat` — Connect with `?token=<jwt>`
+* **Send message:** `{ "type": "send", "payload": { "receiver_id": "...", "content": "...", "type": "text" } }`
+* **Get history:** `{ "type": "get_history", "payload": { "user_id": "...", "page": 1, "limit": 20 } }`
+* **Server responses:** `{ "type": "message"|"history"|"error", "payload": {...} }`
 
 ### 📤 Upload File
 **POST** `/api/upload`
@@ -178,12 +179,13 @@ knowledge-capsule/
 │   ├── handlers/       # HTTP handlers
 │   ├── middleware/     # Auth, logger, etc.
 │   ├── models/         # Data models
-│   └── store/          # JSON-based storage
+│   └── store/          # GORM stores
 ├── pkg/
 │   ├── config/         # Configuration loading
+│   ├── db/             # PostgreSQL connection
 │   └── utils/          # Helpers
 ├── web/                # Frontend assets (Chat UI)
-├── data/               # JSON data store
+├── uploads/            # Uploaded files
 ├── scripts/            # Helper scripts
 ├── Dockerfile
 ├── Dockerfile.dev

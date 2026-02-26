@@ -312,42 +312,6 @@ paths:
       summary: Get, update, or delete a capsule by ID
       tags:
       - capsules
-  /api/chat/history:
-    get:
-      consumes:
-      - application/json
-      description: Get paginated chat history between current user and another user
-      parameters:
-      - description: Other user ID
-        in: query
-        name: user_id
-        required: true
-        type: string
-      - description: Page number (default 1)
-        in: query
-        name: page
-        type: integer
-      - description: Items per page (default 20, max 100)
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 'Paginated messages: data, page, limit, total'
-          schema:
-            $ref: '#/definitions/models.PaginatedResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get chat history
-      tags:
-      - chat
   /api/search:
     get:
       consumes:

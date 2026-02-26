@@ -5,12 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	"knowledge-capsule/app/models"
-	"knowledge-capsule/app/store"
 	"knowledge-capsule/pkg/utils"
 )
-
-var TopicStore = &store.TopicStore{FileStore: store.FileStore[models.Topic]{FilePath: "data/topics.json"}}
 
 // TopicHandler godoc
 // @Summary Get or create topics

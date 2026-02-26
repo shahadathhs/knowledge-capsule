@@ -12,6 +12,7 @@ type Config struct {
 	Env         string
 	JWTSecret   string
 	CORSOrigins []string
+	DatabaseURL string
 }
 
 // loadEnv reads .env file and sets environment variables. Ignores if file does not exist.
@@ -60,11 +61,17 @@ func Load() (Config, error) {
 
 	corsOrigins := parseCORSOrigins(os.Getenv("CORS_ORIGINS"), env)
 
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		return Config{}, fmt.Errorf("missing required environment variable: DATABASE_URL")
+	}
+
 	return Config{
 		Port:        port,
 		Env:         env,
 		JWTSecret:   jwtSecret,
 		CORSOrigins: corsOrigins,
+		DatabaseURL: databaseURL,
 	}, nil
 }
 

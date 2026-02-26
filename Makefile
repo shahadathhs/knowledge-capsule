@@ -21,7 +21,7 @@ BIN_DIR := $(GOBIN)
 # Convenience
 .PHONY: all help install hooks run build-local build build-dev push push-dev \
 	clean fmt vet tidy up down up-dev down-dev restart restart-dev logs logs-dev \
-	containers volumes networks images g-jwt swagger
+	containers volumes networks images g-jwt swagger db down-db
 
 all: build-local
 
@@ -34,6 +34,8 @@ help:
 	@echo "  make build-dev              Build development Docker image ($(APP_IMAGE_DEV))"
 	@echo "  make push                   Push production image ($(APP_IMAGE))"
 	@echo "  make push-dev               Push development image ($(APP_IMAGE_DEV))"
+	@echo "  make db                     Start database compose profile"
+	@echo "  make down-db                Stop database compose profile"
 	@echo "  make up                     Start production compose profile"
 	@echo "  make down                   Stop production compose profile"
 	@echo "  make up-dev                 Start development compose profile"
@@ -129,6 +131,14 @@ push-dev: build-dev
 # -------------------------
 # Docker compose (profiles)
 # -------------------------
+db:
+	@echo "🐳 Starting Docker Compose For Database..."
+	@docker compose -f $(COMPOSE_FILE) --profile db up -d
+
+down-db:
+	@echo "🛑 Stopping Docker Compose For Database..."
+	@docker compose -f $(COMPOSE_FILE) --profile db down
+
 up:
 	@echo "🐳 Starting Docker Compose For Production..."
 	@docker compose -f $(COMPOSE_FILE) --profile prod up -d --build
