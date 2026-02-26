@@ -62,6 +62,7 @@ func main() {
 	mux.HandleFunc("/api", handlers.ApiRootHandler)
 
 	mux.HandleFunc("/health", handlers.HealthHandler)
+	mux.HandleFunc("/test-ws", handlers.TestChatHandler)
 
 	// Swagger
 	mux.HandleFunc("/docs/", httpSwagger.WrapHandler)

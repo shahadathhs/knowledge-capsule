@@ -75,6 +75,8 @@ make down       # prod
 
 ## 🖥️ Run Locally (Without Docker)
 
+Ensure PostgreSQL is running (e.g. `make db` or your own instance) and `DATABASE_URL` is set in `.env`.
+
 Install dependencies:
 
 ```bash
@@ -96,7 +98,7 @@ make build-local
 
 ## 🧪 **Test Chat UI**
 
-Open `web/test_chat.html` in your browser to test the WebSocket chat functionality.
+**GET** `/test-ws` — WebSocket chat test page (same origin as API, no CORS issues)
 
 ## 📘 **API Documentation**
 
@@ -124,8 +126,10 @@ Body:
 
 ## 🗂️ **Topic Management** (Requires JWT)
 
-* 📥 **GET** `/api/topics` – Fetch topics
+* 📥 **GET** `/api/topics?page=1&limit=20` – Fetch topics (paginated)
 * ➕ **POST** `/api/topics` – Create topic
+* ✏️ **PUT** `/api/topics/{id}` – Update topic
+* 🗑️ **DELETE** `/api/topics/{id}` – Delete topic
 
 ## 🧠 **Capsule Management** (Requires JWT)
 
@@ -145,11 +149,19 @@ Body:
 
 ### 📥 Get Capsules
 
-**GET** `/api/capsules`
+**GET** `/api/capsules?page=1&limit=20`
+
+### ✏️ Update Capsule
+
+**PUT** `/api/capsules/{id}`
+
+### 🗑️ Delete Capsule
+
+**DELETE** `/api/capsules/{id}`
 
 ## 🔍 **Search Capsules**
 
-**GET** `/api/search?q=<query>`
+**GET** `/api/search?q=<query>&page=1&limit=20`
 
 ## ❤️‍🩹 **Health Check**
 
@@ -185,6 +197,7 @@ knowledge-capsule/
 │   ├── db/             # PostgreSQL connection
 │   └── utils/          # Helpers
 ├── web/                # Frontend assets (Chat UI)
+├── docs/               # Swagger API docs
 ├── uploads/            # Uploaded files
 ├── scripts/            # Helper scripts
 ├── Dockerfile
@@ -197,10 +210,11 @@ knowledge-capsule/
 ## 🛠️ **Development Commands**
 
 * 📘 `make help` – See all commands
-* ▶️ `make run` – Run locally
+* ▶️ `make run` – Run locally with live reload
 * 🔨 `make build-local` – Build binary
+* 🐘 `make db` – Start PostgreSQL (for local dev)
 * ✨ `make fmt` – Format code
 * 🔍 `make vet` – Static analysis
 * 🧹 `make tidy` – Cleanup modules
-* 🧪 `make test` – Run tests
+* 📝 `make swagger` – Generate API docs
 * 🔐 `make g-jwt` – Generate JWT secret

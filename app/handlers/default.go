@@ -6,6 +6,14 @@ import (
 	"knowledge-capsule/pkg/utils"
 )
 
+// TestChatHandler serves the WebSocket chat test page at /test-ws.
+func TestChatHandler(w http.ResponseWriter, r *http.Request) {
+	if !utils.AllowMethod(w, r, http.MethodGet) {
+		return
+	}
+	http.ServeFile(w, r, "web/test_chat.html")
+}
+
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 	if !utils.AllowMethod(w, r, http.MethodGet) {
 		return
